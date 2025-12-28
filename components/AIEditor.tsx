@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export default function AIEditor() {
-  const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google'>('openai');
+  const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google' | 'xai'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gpt-4o-mini');
   const [originalText, setOriginalText] = useState('');
@@ -30,17 +30,18 @@ export default function AIEditor() {
   });
 
   const features = [
-    { id: 's2t', name: '中文簡轉繁', desc: '將簡體中文轉換為繁體中文（台灣用字標準）' },
-    { id: 'englishCheck', name: '英文字偵錯', desc: '檢查英文拼字、時態，並在中英文間加上空格' },
-    { id: 'typoFix', name: '修錯字贅字', desc: '根據語意判斷並修正錯字、同音異字、贅字' },
-    { id: 'punctuation', name: '修標點段落', desc: '依語意修正標點符號使用並適當分段' },
-    { id: 'removeTimestamp', name: '刪時間戳記', desc: '刪除影片字幕的時間戳記（如 [00:00:00]）' },
+    { id: 's2t', name: '中文簡轉繁', desc: '' },
+    { id: 'englishCheck', name: '英文字偵錯', desc: '' },
+    { id: 'typoFix', name: '修錯字贅字', desc: '' },
+    { id: 'punctuation', name: '修標點段落', desc: '' },
+    { id: 'removeTimestamp', name: '刪時間戳記', desc: '' },
   ];
 
   const apiProviders = [
     { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'] },
     { id: 'anthropic', name: 'Anthropic Claude', models: ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'] },
     { id: 'google', name: 'Google Gemini', models: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'] },
+    { id: 'xai', name: 'xAI Grok', models: ['grok-beta', 'grok-vision-beta'] },
   ];
 
   const toggleFeature = (featureId: string) => {
@@ -225,12 +226,9 @@ export default function AIEditor() {
                 onChange={() => toggleFeature(feature.id)}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
               />
-              <div className="text-center">
-                <span className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors whitespace-nowrap block">
-                  {feature.name}
-                </span>
-                <span className="text-xs text-gray-500">{feature.desc}</span>
-              </div>
+              <span className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors whitespace-nowrap">
+                {feature.name}
+              </span>
             </label>
           ))}
         </div>
