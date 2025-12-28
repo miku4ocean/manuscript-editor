@@ -7,6 +7,8 @@ import {
   type FeatureType,
 } from '@/lib/textProcessor';
 import { calculateDiff, type DiffSegment } from '@/lib/diffUtils';
+import TabNavigation from '@/components/TabNavigation';
+import AIEditor from '@/components/AIEditor';
 
 const features = [
   { id: 'simplified-to-traditional' as FeatureType, name: '簡體轉繁體', desc: '將簡體中文轉為繁體' },
@@ -19,6 +21,7 @@ const features = [
 ];
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'dictionary' | 'ai'>('dictionary');
   const [originalText, setOriginalText] = useState('');
   const [processedText, setProcessedText] = useState('');
   const [enabledFeatures, setEnabledFeatures] = useState<Set<FeatureType>>(new Set());
@@ -106,7 +109,14 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-[1400px] mx-auto px-6 py-6">
+      {/* Tab Navigation */}
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Content */}
+      {activeTab === 'ai' ? (
+        <AIEditor />
+      ) : (
+        <main className="max-w-[1400px] mx-auto px-6 py-6">
         {/* Features Section */}
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -265,7 +275,8 @@ export default function Home() {
             </div>
           </div>
         )}
-      </main>
+        </main>
+      )}
     </div>
   );
 }
