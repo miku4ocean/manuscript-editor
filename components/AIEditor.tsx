@@ -11,7 +11,7 @@ export default function AIEditor() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // Load API key from localStorage on mount
+  // 從 localStorage 載入 API Key
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedApiKey = localStorage.getItem(`ai-editor-apikey-${apiProvider}`);
@@ -30,11 +30,11 @@ export default function AIEditor() {
   });
 
   const features = [
-    { id: 's2t', name: '中文簡轉繁', desc: '簡體中文字轉繁體中文字' },
-    { id: 'englishCheck', name: '英文字偵錯', desc: '拼法、時態、空白處理' },
-    { id: 'typoFix', name: '修錯字贅字', desc: 'AI 判斷語意修正錯字和贅字' },
-    { id: 'punctuation', name: '修標點段落', desc: '依語意修正標點符號和分段' },
-    { id: 'removeTimestamp', name: '刪時間戳記', desc: '刪除逐字稿時間戳記' },
+    { id: 's2t', name: '中文簡轉繁', desc: '將簡體中文轉換為繁體中文（台灣用字標準）' },
+    { id: 'englishCheck', name: '英文字偵錯', desc: '檢查英文拼字、時態，並在中英文間加上空格' },
+    { id: 'typoFix', name: '修錯字贅字', desc: '根據語意判斷並修正錯字、同音異字、贅字' },
+    { id: 'punctuation', name: '修標點段落', desc: '依語意修正標點符號使用並適當分段' },
+    { id: 'removeTimestamp', name: '刪時間戳記', desc: '刪除影片字幕的時間戳記（如 [00:00:00]）' },
   ];
 
   const apiProviders = [
@@ -181,7 +181,7 @@ export default function AIEditor() {
                 onChange={(e) => {
                   const newKey = e.target.value;
                   setApiKey(newKey);
-                  // Save to localStorage
+                  // 儲存到 localStorage
                   if (typeof window !== 'undefined') {
                     if (newKey) {
                       localStorage.setItem(`ai-editor-apikey-${apiProvider}`, newKey);
