@@ -1,6 +1,18 @@
 # Manuscript Editor - 專業文稿編輯工具
 
+[![GitHub release](https://img.shields.io/github/v/release/miku4ocean/manuscript-editor)](https://github.com/miku4ocean/manuscript-editor/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC)](https://tailwindcss.com/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Active-success)](https://miku4ocean.github.io/manuscript-editor/)
+
 一個專業的文稿初稿審查工具，提供多種自動化編輯功能，幫助您快速優化中文文稿品質。
+
+## 🌐 線上體驗
+
+👉 **[立即使用](https://miku4ocean.github.io/manuscript-editor/)**
 
 ## 功能特色
 
