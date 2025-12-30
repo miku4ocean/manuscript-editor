@@ -10,6 +10,7 @@ export default function AIEditor() {
   const [processedText, setProcessedText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'txt' | 'md'>('txt');
 
   // 從 localStorage 載入 API Key
   useEffect(() => {
@@ -87,8 +88,9 @@ export default function AIEditor() {
       const data = await response.json();
       setProcessedText(data.processedText);
     } catch (error) {
-      console.error('處理錯誤:', error);
-      alert(`處理文稿時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      // 安全性：不在 console 記錄可能包含 API Key 的錯誤
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      alert(`處理文稿時發生錯誤: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
@@ -103,11 +105,15 @@ export default function AIEditor() {
 
   const handleExport = () => {
     if (processedText) {
-      const blob = new Blob([processedText], { type: 'text/plain' });
+      // 根據選擇的格式設定 MIME type 和副檔名
+      const mimeType = exportFormat === 'md' ? 'text/markdown' : 'text/plain';
+      const extension = exportFormat === 'md' ? 'md' : 'txt';
+
+      const blob = new Blob([processedText], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `processed_${Date.now()}.txt`;
+      a.download = `processed_${Date.now()}.${extension}`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -253,11 +259,24 @@ export default function AIEditor() {
           📋 複製結果
         </button>
         <button
-          onClick={handleExport}
+          onClick={() => {
+            setExportFormat('txt');
+            setTimeout(handleExport, 0);
+          }}
           disabled={!processedText}
           className="px-5 py-2 bg-white border-2 border-gray-400 text-gray-700 rounded font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           ↓ 匯出 TXT
+        </button>
+        <button
+          onClick={() => {
+            setExportFormat('md');
+            setTimeout(handleExport, 0);
+          }}
+          disabled={!processedText}
+          className="px-5 py-2 bg-white border-2 border-gray-400 text-gray-700 rounded font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          ↓ 匯出 MD
         </button>
       </div>
 

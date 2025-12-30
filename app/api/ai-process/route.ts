@@ -269,10 +269,23 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ processedText });
   } catch (error) {
-    console.error('AI processing error:', error);
+    // 安全性：不記錄可能包含 API Key 的錯誤訊息
+    // 只記錄錯誤類型，不記錄完整錯誤內容
+    const errorMessage = error instanceof Error ? error.message : '處理文稿時發生錯誤';
+
+    // 檢查錯誤訊息是否包含敏感資訊並清理
+    const sanitizedMessage = errorMessage.replace(/sk-[a-zA-Z0-9-_]+/g, '[REDACTED]')
+      .replace(/Bearer\s+[a-zA-Z0-9-_\.]+/g, 'Bearer [REDACTED]')
+      .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-_]+/gi, 'api_key: [REDACTED]');
+
+    // 只在開發環境記錄錯誤
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI processing error (sanitized):', sanitizedMessage);
+    }
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : '處理文稿時發生錯誤',
+        error: sanitizedMessage,
       },
       { status: 500 }
     );
