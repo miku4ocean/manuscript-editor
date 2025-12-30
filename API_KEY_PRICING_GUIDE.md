@@ -6,6 +6,7 @@
 - [Google Gemini API Key 申請](#google-gemini-api-key-申請)
 - [Anthropic Claude API Key 申請](#anthropic-claude-api-key-申請)
 - [xAI Grok API Key 申請](#xai-grok-api-key-申請)
+- [DeepSeek API Key 申請](#deepseek-api-key-申請)
 - [計價比較表](#計價比較表)
 - [成本估算](#成本估算)
 
@@ -148,6 +149,40 @@
 
 ---
 
+## DeepSeek API Key 申請
+
+### 申請步驟
+
+1. **前往 DeepSeek Platform**
+   - 網址：https://platform.deepseek.com/
+
+2. **註冊帳號**
+   - 使用 Email 註冊
+   - 或使用 GitHub 帳號登入
+   - 驗證電子郵件
+
+3. **設定付款方式**
+   - 進入 API Keys 頁面
+   - 充值最低金額：約 $5 USD
+   - 支援信用卡、支付寶等
+
+4. **創建 API Key**
+   - 進入 API Keys 頁面
+   - 點擊 "Create API Key"
+   - 命名並複製
+   - 格式：`sk-...`
+
+### 可用模型與計價（2025年1月）
+
+| 模型 | Input 價格 | Output 價格 | 適用場景 |
+|------|-----------|-------------|---------|
+| **deepseek-chat** ⭐推薦 | $0.14 / 1M tokens | $0.28 / 1M tokens | 通用對話模型，性價比極高 |
+| **deepseek-coder** | $0.14 / 1M tokens | $0.28 / 1M tokens | 程式碼專用，適合技術文件 |
+
+**注意**：DeepSeek 是目前市場上性價比最高的 AI 模型之一
+
+---
+
 ## 計價比較表
 
 ### 所有模型完整比較（依成本排序）
@@ -156,14 +191,16 @@
 |------|--------|------|-----------|------------|-------------------|
 | 1 | Google | gemini-2.0-flash-exp | 免費 | 免費 | **免費** ⭐ |
 | 2 | Google | gemini-1.5-flash | 免費額度內 | 免費額度內 | **免費** ⭐ |
-| 3 | OpenAI | gpt-4o-mini | $0.150 | $0.600 | $0.750 / 1M tokens |
-| 4 | Anthropic | claude-3-haiku | $0.25 | $1.25 | $1.50 / 1M tokens |
-| 5 | OpenAI | gpt-3.5-turbo | $0.50 | $1.50 | $2.00 / 1M tokens |
-| 6 | Google | gemini-1.5-pro | $1.25 / 1M chars | $1.25 / 1M chars | $2.50 / 1M chars |
-| 7 | OpenAI | gpt-4o | $2.50 | $10.00 | $12.50 / 1M tokens |
-| 8 | Anthropic | claude-3-5-sonnet | $3.00 | $15.00 | $18.00 / 1M tokens |
-| 9 | xAI | grok-beta | $5.00 | $15.00 | $20.00 / 1M tokens |
-| 10 | OpenAI | gpt-4-turbo | $10.00 | $30.00 | $40.00 / 1M tokens |
+| 3 | DeepSeek | deepseek-chat | $0.14 | $0.28 | **$0.42 / 1M tokens** ⭐ |
+| 4 | DeepSeek | deepseek-coder | $0.14 | $0.28 | **$0.42 / 1M tokens** ⭐ |
+| 5 | OpenAI | gpt-4o-mini | $0.150 | $0.600 | $0.750 / 1M tokens |
+| 6 | Anthropic | claude-3-haiku | $0.25 | $1.25 | $1.50 / 1M tokens |
+| 7 | OpenAI | gpt-3.5-turbo | $0.50 | $1.50 | $2.00 / 1M tokens |
+| 8 | Google | gemini-1.5-pro | $1.25 / 1M chars | $1.25 / 1M chars | $2.50 / 1M chars |
+| 9 | OpenAI | gpt-4o | $2.50 | $10.00 | $12.50 / 1M tokens |
+| 10 | Anthropic | claude-3-5-sonnet | $3.00 | $15.00 | $18.00 / 1M tokens |
+| 11 | xAI | grok-beta | $5.00 | $15.00 | $20.00 / 1M tokens |
+| 12 | OpenAI | gpt-4-turbo | $10.00 | $30.00 | $40.00 / 1M tokens |
 
 ---
 
@@ -187,6 +224,8 @@
 |--------|------|--------------|---------------|------------|------------|
 | **Google** | gemini-2.0-flash-exp | ~350 | ~200 | **$0.0000** | **$0.00** ⭐ |
 | **Google** | gemini-1.5-flash | ~350 chars | ~200 chars | **$0.0000** | **$0.00** ⭐ |
+| **DeepSeek** | deepseek-chat | ~350 | ~200 | **$0.000105** | **$0.003** ⭐ |
+| **DeepSeek** | deepseek-coder | ~350 | ~200 | **$0.000105** | **$0.003** ⭐ |
 | **OpenAI** | gpt-4o-mini | ~350 | ~200 | $0.000173 | $0.005 |
 | **Anthropic** | claude-3-haiku | ~350 | ~200 | $0.000338 | $0.010 |
 | **OpenAI** | gpt-3.5-turbo | ~350 | ~200 | $0.000475 | $0.014 |
@@ -203,6 +242,8 @@
 |--------|------|--------------|--------------|
 | **Google** | gemini-2.0-flash-exp | **$0.00** | **$0** ⭐ |
 | **Google** | gemini-1.5-flash | **$0.00** | **$0** ⭐ |
+| **DeepSeek** | deepseek-chat | **$0.01** | **$0.3** ⭐ |
+| **DeepSeek** | deepseek-coder | **$0.01** | **$0.3** ⭐ |
 | **OpenAI** | gpt-4o-mini | $0.17 | $5 |
 | **Anthropic** | claude-3-haiku | $0.34 | $10 |
 | **OpenAI** | gpt-3.5-turbo | $0.48 | $14 |
@@ -230,7 +271,23 @@
 
 ---
 
-### 🥈 性價比優先 → OpenAI
+### 🥈 極致性價比 → DeepSeek
+
+**推薦：deepseek-chat**
+
+✅ **優點：**
+- **價格極低**（僅 $0.01 / 10,000字，約 NT$0.3）
+- 性能出色，中文處理能力強
+- 回應速度快
+- 付費門檻低
+
+⚠️ **注意：**
+- 需要綁定信用卡充值
+- 中國廠商，部分地區可能有連線問題
+
+---
+
+### 🥉 穩定性價比 → OpenAI
 
 **推薦：gpt-4o-mini**
 
@@ -246,7 +303,7 @@
 
 ---
 
-### 🥉 品質優先 → Anthropic
+### 🏆 品質優先 → Anthropic
 
 **推薦：claude-3-5-sonnet-20241022**
 
@@ -302,12 +359,14 @@
 - [Google Gemini API Documentation](https://ai.google.dev/docs)
 - [Anthropic Claude API Documentation](https://docs.anthropic.com/)
 - [xAI Grok API Documentation](https://docs.x.ai/)
+- [DeepSeek API Documentation](https://platform.deepseek.com/api-docs/)
 
 ### 價格頁面
 - [OpenAI Pricing](https://openai.com/api/pricing/)
 - [Google Gemini Pricing](https://ai.google.dev/pricing)
 - [Anthropic Pricing](https://www.anthropic.com/pricing)
 - [xAI Pricing](https://x.ai/api)
+- [DeepSeek Pricing](https://platform.deepseek.com/)
 
 ---
 

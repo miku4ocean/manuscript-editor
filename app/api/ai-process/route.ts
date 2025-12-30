@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface AIProcessRequest {
-  provider: 'openai' | 'anthropic' | 'google' | 'xai';
+  provider: 'openai' | 'anthropic' | 'google' | 'xai' | 'deepseek';
   apiKey: string;
   model: string;
   text: string;
@@ -192,6 +192,39 @@ async function processWithXAI(apiKey: string, model: string, prompt: string): Pr
   return data.choices[0].message.content.trim();
 }
 
+// Call DeepSeek API
+async function processWithDeepSeek(apiKey: string, model: string, prompt: string): Promise<string> {
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: '你是一個專業的中文文稿編輯助手，擅長修正錯字、標點符號、簡繁轉換和文稿整理。'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'DeepSeek API 請求失敗');
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: AIProcessRequest = await request.json();
@@ -223,6 +256,9 @@ export async function POST(request: NextRequest) {
         break;
       case 'xai':
         processedText = await processWithXAI(apiKey, model, prompt);
+        break;
+      case 'deepseek':
+        processedText = await processWithDeepSeek(apiKey, model, prompt);
         break;
       default:
         return NextResponse.json(

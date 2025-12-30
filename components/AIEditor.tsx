@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export default function AIEditor() {
-  const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google' | 'xai'>('openai');
+  const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google' | 'xai' | 'deepseek'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState('gpt-4o-mini');
   const [originalText, setOriginalText] = useState('');
@@ -42,6 +42,7 @@ export default function AIEditor() {
     { id: 'anthropic', name: 'Anthropic Claude', models: ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'] },
     { id: 'google', name: 'Google Gemini', models: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'] },
     { id: 'xai', name: 'xAI Grok', models: ['grok-beta', 'grok-vision-beta'] },
+    { id: 'deepseek', name: 'DeepSeek', models: ['deepseek-chat', 'deepseek-coder'] },
   ];
 
   const toggleFeature = (featureId: string) => {
@@ -67,11 +68,6 @@ export default function AIEditor() {
 
     setIsProcessing(true);
     try {
-      const selectedFeatures = Object.entries(enabledFeatures)
-        .filter(([_, enabled]) => enabled)
-        .map(([key, _]) => features.find(f => f.id === key)?.name)
-        .join('、');
-
       const response = await fetch('/api/ai-process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
