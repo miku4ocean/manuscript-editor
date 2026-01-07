@@ -1,11 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Nordic Design System Colors */
+  --nordic-bg-primary: #f8f9fb;
+  --nordic-bg-secondary: #ffffff;
+  --nordic-bg-tertiary: #f0f2f5;
+  --nordic-bg-hover: #e8eaef;
+  --nordic-accent-primary: #5a6a7a;
+  --nordic-accent-dark: #3a4a5a;
+  --nordic-text-primary: #2a3a4a;
+  --nordic-text-secondary: #5a6a7a;
+  --nordic-text-muted: #8a9aaa;
+  --nordic-border-color: #e0e4e8;
+  --nordic-border-light: #d0d4d8;
+}
+
 body {
-  background: #f8fafc;
-  color: #1e293b;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--nordic-bg-primary);
+  color: var(--nordic-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom scrollbar styles for better Material Design look */
