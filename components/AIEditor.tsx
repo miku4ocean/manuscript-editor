@@ -441,17 +441,32 @@ export default function AIEditor() {
                   {formatCost(estimatedCost.cost)}
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>折合台幣:</span>
+                <span className="badge font-bold" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+                  NT$ {(estimatedCost.cost * 32.5).toFixed(2)}
+                </span>
+              </div>
               {actualCost !== null && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>實際成本:</span>
-                  <span className="badge badge-success font-bold">
-                    {formatCost(actualCost)}
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>實際成本:</span>
+                    <span className="badge badge-success font-bold">
+                      {formatCost(actualCost)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>實際台幣:</span>
+                    <span className="badge font-bold" style={{ background: '#d1fae5', color: '#047857' }}>
+                      NT$ {(actualCost * 32.5).toFixed(2)}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
             <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
               * 成本預估僅供參考，實際費用以 API 提供商帳單為準。中文約 1.5 tokens/字，英文約 0.25 tokens/字。
+              <br />* 台幣換算使用參考匯率 1 USD ≈ 32.5 TWD
             </p>
           </div>
         </div>
