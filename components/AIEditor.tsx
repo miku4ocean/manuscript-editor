@@ -1,26 +1,108 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
+// 最新 API 提供商和模型資訊 (2025年1月更新)
 const apiProviders = [
-  { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview', 'o1-mini'] },
-  { id: 'anthropic', name: 'Anthropic Claude', models: ['claude-3-7-sonnet-20250219', 'claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'] },
-  { id: 'google', name: 'Google Gemini', models: ['gemini-2.0-flash-exp', 'gemini-exp-1206'] },
-  { id: 'xai', name: 'xAI Grok', models: ['grok-2-1212', 'grok-2-vision-1212', 'grok-beta'] },
-  { id: 'deepseek', name: 'DeepSeek', models: ['deepseek-chat', 'deepseek-reasoner'] },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    icon: '🟢',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 5.00, outputPrice: 20.00 },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', inputPrice: 0.60, outputPrice: 2.40 },
+      { id: 'o3', name: 'o3 (Reasoning)', inputPrice: 2.00, outputPrice: 8.00 },
+      { id: 'o3-mini', name: 'o3-mini', inputPrice: 1.10, outputPrice: 4.40 },
+      { id: 'o1', name: 'o1 (Reasoning)', inputPrice: 15.00, outputPrice: 60.00 },
+    ],
+    docsUrl: 'https://platform.openai.com/docs/overview',
+    apiKeyUrl: 'https://platform.openai.com/api-keys',
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic Claude',
+    icon: '🟠',
+    models: [
+      { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet', inputPrice: 3.00, outputPrice: 15.00 },
+      { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku', inputPrice: 1.00, outputPrice: 5.00 },
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', inputPrice: 3.00, outputPrice: 15.00 },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', inputPrice: 0.80, outputPrice: 4.00 },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', inputPrice: 15.00, outputPrice: 75.00 },
+    ],
+    docsUrl: 'https://docs.anthropic.com/claude/docs',
+    apiKeyUrl: 'https://console.anthropic.com/settings/keys',
+  },
+  {
+    id: 'google',
+    name: 'Google Gemini',
+    icon: '🔵',
+    models: [
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', inputPrice: 0.10, outputPrice: 0.40 },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', inputPrice: 1.25, outputPrice: 10.00 },
+      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Free)', inputPrice: 0, outputPrice: 0 },
+    ],
+    docsUrl: 'https://ai.google.dev/docs',
+    apiKeyUrl: 'https://aistudio.google.com/app/apikey',
+  },
+  {
+    id: 'xai',
+    name: 'xAI Grok',
+    icon: '⚫',
+    models: [
+      { id: 'grok-4-fast', name: 'Grok 4 Fast', inputPrice: 0.20, outputPrice: 0.50 },
+      { id: 'grok-4', name: 'Grok 4', inputPrice: 3.00, outputPrice: 15.00 },
+      { id: 'grok-3', name: 'Grok 3', inputPrice: 3.00, outputPrice: 15.00 },
+    ],
+    docsUrl: 'https://docs.x.ai/',
+    apiKeyUrl: 'https://console.x.ai/',
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    icon: '🟣',
+    models: [
+      { id: 'deepseek-chat', name: 'DeepSeek Chat', inputPrice: 0.56, outputPrice: 1.68 },
+      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', inputPrice: 0.56, outputPrice: 1.68 },
+    ],
+    docsUrl: 'https://platform.deepseek.com/docs',
+    apiKeyUrl: 'https://platform.deepseek.com/api_keys',
+  },
 ];
 
 const features = [
-  { id: 's2t', name: '簡體轉繁體' },
-  { id: 'englishCheck', name: '英文檢查' },
-  { id: 'typoFix', name: '修正錯字' },
-  { id: 'punctuation', name: '修正標點' },
-  { id: 'removeTimestamp', name: '刪除時間戳' },
+  { id: 's2t', name: '簡體轉繁體', icon: '🔄' },
+  { id: 'englishCheck', name: '英文檢查', icon: '🔤' },
+  { id: 'typoFix', name: '修正錯字', icon: '✏️' },
+  { id: 'punctuation', name: '修正標點', icon: '。' },
+  { id: 'removeTimestamp', name: '刪除時間戳', icon: '⏱️' },
 ];
+
+// 估算 token 數量 (中文約 1.5-2 tokens/字, 英文約 0.25 tokens/字)
+function estimateTokens(text: string): number {
+  if (!text) return 0;
+  let tokens = 0;
+  for (const char of text) {
+    if (/[\u4e00-\u9fff]/.test(char)) {
+      tokens += 1.5; // 中文字元
+    } else if (/[a-zA-Z]/.test(char)) {
+      tokens += 0.25; // 英文字母
+    } else {
+      tokens += 0.5; // 其他字元
+    }
+  }
+  return Math.ceil(tokens);
+}
+
+// 計算預估成本
+function calculateCost(inputTokens: number, outputTokens: number, inputPrice: number, outputPrice: number): number {
+  const inputCost = (inputTokens / 1_000_000) * inputPrice;
+  const outputCost = (outputTokens / 1_000_000) * outputPrice;
+  return inputCost + outputCost;
+}
 
 export default function AIEditor() {
   const [apiProvider, setApiProvider] = useState('openai');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [modelId, setModelId] = useState('gpt-4o-mini');
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [originalText, setOriginalText] = useState('');
@@ -28,6 +110,7 @@ export default function AIEditor() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exportFormat, setExportFormat] = useState<'txt' | 'md'>('txt');
+  const [actualCost, setActualCost] = useState<number | null>(null);
   const [enabledFeatures, setEnabledFeatures] = useState({
     s2t: true,
     englishCheck: true,
@@ -35,6 +118,39 @@ export default function AIEditor() {
     punctuation: true,
     removeTimestamp: false,
   });
+
+  // 取得當前選擇的提供商和模型
+  const currentProvider = useMemo(() =>
+    apiProviders.find(p => p.id === apiProvider),
+    [apiProvider]
+  );
+
+  const currentModel = useMemo(() =>
+    currentProvider?.models.find(m => m.id === modelId),
+    [currentProvider, modelId]
+  );
+
+  // 預估成本計算
+  const estimatedCost = useMemo(() => {
+    if (!originalText || !currentModel) return null;
+
+    const inputTokens = estimateTokens(originalText);
+    // 假設輸出與輸入差不多長度
+    const outputTokens = inputTokens;
+
+    const cost = calculateCost(
+      inputTokens,
+      outputTokens,
+      currentModel.inputPrice,
+      currentModel.outputPrice
+    );
+
+    return {
+      inputTokens,
+      outputTokens,
+      cost
+    };
+  }, [originalText, currentModel]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -65,6 +181,8 @@ export default function AIEditor() {
     }
 
     setIsProcessing(true);
+    setActualCost(null);
+
     try {
       const response = await fetch('/api/ai-process', {
         method: 'POST',
@@ -72,7 +190,7 @@ export default function AIEditor() {
         body: JSON.stringify({
           provider: apiProvider,
           apiKey,
-          model,
+          model: modelId,
           text: originalText,
           features: enabledFeatures,
         }),
@@ -85,6 +203,17 @@ export default function AIEditor() {
 
       const data = await response.json();
       setProcessedText(data.processedText);
+
+      // 計算實際成本
+      if (currentModel && data.usage) {
+        const cost = calculateCost(
+          data.usage.inputTokens || estimatedCost?.inputTokens || 0,
+          data.usage.outputTokens || estimatedCost?.outputTokens || 0,
+          currentModel.inputPrice,
+          currentModel.outputPrice
+        );
+        setActualCost(cost);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
       alert(`處理文稿時發生錯誤: ${errorMessage}`);
@@ -118,198 +247,293 @@ export default function AIEditor() {
   const handleReset = () => {
     setOriginalText('');
     setProcessedText('');
+    setActualCost(null);
   };
 
-  const currentProvider = apiProviders.find(p => p.id === apiProvider);
+  // 格式化金額顯示
+  const formatCost = (cost: number): string => {
+    if (cost < 0.0001) return '< $0.0001';
+    if (cost < 0.01) return `$${cost.toFixed(4)}`;
+    return `$${cost.toFixed(4)}`;
+  };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-12">
-      {/* API Configuration */}
-      <div className="py-20 border-b" style={{ borderColor: '#f0f0f0' }}>
-        <div className="flex items-center justify-center gap-4">
-          <select
-            value={apiProvider}
-            onChange={(e) => {
-              setApiProvider(e.target.value);
-              setModel(apiProviders.find(p => p.id === e.target.value)?.models[0] || '');
-            }}
-            className="px-4 py-2.5 text-[13px] rounded-md cursor-pointer"
-            style={{
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              color: '#2d3748'
-            }}
-          >
-            {apiProviders.map(provider => (
-              <option key={provider.id} value={provider.id}>{provider.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="px-4 py-2.5 text-[13px] rounded-md cursor-pointer"
-            style={{
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              color: '#2d3748'
-            }}
-          >
-            {currentProvider?.models.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-
-          <div className="relative" style={{ width: '280px' }}>
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              value={apiKey}
-              onChange={(e) => {
-                const newKey = e.target.value;
-                setApiKey(newKey);
-                if (typeof window !== 'undefined') {
-                  if (newKey) {
-                    localStorage.setItem(`ai-editor-apikey-${apiProvider}`, newKey);
-                  } else {
-                    localStorage.removeItem(`ai-editor-apikey-${apiProvider}`);
-                  }
-                }
-              }}
-              placeholder="API Key"
-              className="w-full px-4 py-2.5 pr-14 text-[13px] rounded-md"
-              style={{
-                background: 'white',
-                border: '1px solid #e2e8f0',
-                color: '#2d3748'
-              }}
-            />
-            <button
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[11px] rounded"
-              style={{
-                background: '#f7fafc',
-                color: '#718096',
-                border: '1px solid #e2e8f0'
-              }}
+    <main className="max-w-7xl mx-auto px-6 py-8 animate-fade-in">
+      {/* API Configuration Card */}
+      <div className="card mb-6">
+        <div className="card-header">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🔑</span>
+            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>API 設定</h2>
+          </div>
+          {currentProvider && (
+            <a
+              href={currentProvider.apiKeyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs underline"
+              style={{ color: 'var(--brand-500)' }}
             >
-              {showApiKey ? '隱藏' : '顯示'}
-            </button>
+              申請 API Key →
+            </a>
+          )}
+        </div>
+        <div className="card-body">
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Provider Select */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                AI 提供商
+              </label>
+              <select
+                value={apiProvider}
+                onChange={(e) => {
+                  setApiProvider(e.target.value);
+                  const newProvider = apiProviders.find(p => p.id === e.target.value);
+                  setModelId(newProvider?.models[0]?.id || '');
+                }}
+                className="input select"
+                style={{ width: '180px' }}
+              >
+                {apiProviders.map(provider => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.icon} {provider.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Model Select */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                模型
+              </label>
+              <select
+                value={modelId}
+                onChange={(e) => setModelId(e.target.value)}
+                className="input select"
+                style={{ width: '200px' }}
+              >
+                {currentProvider?.models.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Model Pricing Info */}
+            {currentModel && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                  定價 (每百萬 tokens)
+                </label>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+                  style={{ background: 'var(--bg-tertiary)' }}>
+                  <span style={{ color: 'var(--success)' }}>輸入: ${currentModel.inputPrice}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>|</span>
+                  <span style={{ color: 'var(--error)' }}>輸出: ${currentModel.outputPrice}</span>
+                </div>
+              </div>
+            )}
+
+            {/* API Key Input */}
+            <div className="flex flex-col gap-1.5 flex-1" style={{ minWidth: '280px' }}>
+              <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                API Key
+              </label>
+              <div className="relative">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => {
+                    const newKey = e.target.value;
+                    setApiKey(newKey);
+                    if (typeof window !== 'undefined') {
+                      if (newKey) {
+                        localStorage.setItem(`ai-editor-apikey-${apiProvider}`, newKey);
+                      } else {
+                        localStorage.removeItem(`ai-editor-apikey-${apiProvider}`);
+                      }
+                    }
+                  }}
+                  placeholder="輸入您的 API Key..."
+                  className="input pr-16"
+                />
+                <button
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost text-xs py-1 px-2"
+                >
+                  {showApiKey ? '🙈 隱藏' : '👁️ 顯示'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Notice */}
+          <div className="mt-4 p-3 rounded-lg flex items-start gap-2"
+            style={{ background: 'var(--success-bg)', border: '1px solid #a7f3d0' }}>
+            <span>🔒</span>
+            <div className="text-xs" style={{ color: '#047857' }}>
+              <strong>安全保障：</strong>
+              API Key 僅儲存在您的瀏覽器 localStorage 中，不會上傳至任何伺服器。
+              所有 API 請求都是從您的瀏覽器直接發送至 AI 提供商。
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Processing Options - Grid layout */}
-      <div className="py-20 border-b" style={{ borderColor: '#f0f0f0' }}>
-        <div className="grid grid-cols-5 gap-x-8 gap-y-12 max-w-[900px] mx-auto">
-          {features.map((feature) => (
-            <label key={feature.id} className="flex items-center gap-3 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={enabledFeatures[feature.id as keyof typeof enabledFeatures]}
-                onChange={() => toggleFeature(feature.id)}
-                className="w-3.5 h-3.5 cursor-pointer flex-shrink-0"
-                style={{ accentColor: '#4a5568' }}
-              />
-              <span className="text-[13px] whitespace-nowrap" style={{ color: '#4a5568' }}>
-                {feature.name}
-              </span>
-            </label>
-          ))}
+      {/* Feature Selection Card */}
+      <div className="card mb-6">
+        <div className="card-header">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚙️</span>
+            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>處理功能</h2>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="feature-grid">
+            {features.map((feature) => {
+              const isChecked = enabledFeatures[feature.id as keyof typeof enabledFeatures];
+              return (
+                <div
+                  key={feature.id}
+                  onClick={() => toggleFeature(feature.id)}
+                  className={`checkbox-wrapper ${isChecked ? 'checked' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleFeature(feature.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{feature.icon}</span>
+                    <span className="text-sm font-medium">{feature.name}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
+      {/* Cost Estimation Card */}
+      {estimatedCost && estimatedCost.cost > 0 && (
+        <div className="card mb-6 animate-slide-up">
+          <div className="card-header" style={{ background: 'var(--warning-bg)', borderColor: '#fde68a' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">💰</span>
+              <h2 className="font-semibold" style={{ color: '#b45309' }}>成本預估</h2>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>輸入 Tokens:</span>
+                <span className="font-medium">{estimatedCost.inputTokens.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>預估輸出:</span>
+                <span className="font-medium">{estimatedCost.outputTokens.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>預估成本:</span>
+                <span className="badge badge-warning font-bold">
+                  {formatCost(estimatedCost.cost)}
+                </span>
+              </div>
+              {actualCost !== null && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>實際成本:</span>
+                  <span className="badge badge-success font-bold">
+                    {formatCost(actualCost)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
+              * 成本預估僅供參考，實際費用以 API 提供商帳單為準。中文約 1.5 tokens/字，英文約 0.25 tokens/字。
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
-      <div className="flex items-center justify-center gap-3 py-20">
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
         <button
           onClick={handleProcess}
-          disabled={isProcessing}
-          className="px-10 py-2.5 text-white text-[13px] font-medium rounded-md transition-all disabled:opacity-50"
-          style={{ background: '#2d3748' }}
-          onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.background = '#1a202c')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#2d3748')}
+          disabled={isProcessing || !apiKey}
+          className="btn btn-primary px-8"
         >
-          {isProcessing ? '處理中...' : '處理文稿'}
+          {isProcessing ? (
+            <>
+              <span className="animate-pulse">🤖</span>
+              AI 處理中...
+            </>
+          ) : (
+            <>
+              <span>✨</span>
+              AI 處理文稿
+            </>
+          )}
         </button>
-        <div className="w-px h-6" style={{ background: '#e2e8f0' }} />
+        <div className="divider" />
         <button
           onClick={handleCopy}
           disabled={!processedText}
-          className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all disabled:opacity-30"
-          style={{
-            background: 'transparent',
-            color: '#718096'
-          }}
-          onMouseEnter={(e) => !processedText || (e.currentTarget.style.color = '#2d3748')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#718096')}
+          className="btn btn-secondary"
         >
-          {copySuccess ? '✓ 已複製' : '複製'}
+          {copySuccess ? '✅ 已複製' : '📋 複製'}
         </button>
-        <select
-          value={exportFormat}
-          onChange={(e) => setExportFormat(e.target.value as 'txt' | 'md')}
-          disabled={!processedText}
-          className="px-4 py-2.5 text-[13px] rounded-md cursor-pointer disabled:opacity-30"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#718096'
-          }}
-        >
-          <option value="txt">TXT</option>
-          <option value="md">Markdown</option>
-        </select>
-        <button
-          onClick={handleExport}
-          disabled={!processedText}
-          className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all disabled:opacity-30"
-          style={{
-            background: 'transparent',
-            color: '#718096'
-          }}
-          onMouseEnter={(e) => !processedText || (e.currentTarget.style.color = '#2d3748')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#718096')}
-        >
-          匯出
-        </button>
+        <div className="flex items-center gap-1">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value as 'txt' | 'md')}
+            disabled={!processedText}
+            className="input select text-sm py-2"
+            style={{ width: '100px' }}
+          >
+            <option value="txt">TXT</option>
+            <option value="md">Markdown</option>
+          </select>
+          <button
+            onClick={handleExport}
+            disabled={!processedText}
+            className="btn btn-secondary"
+          >
+            📥 匯出
+          </button>
+        </div>
         <button
           onClick={handleReset}
-          className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all"
-          style={{
-            background: 'transparent',
-            color: '#cbd5e0'
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#718096')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e0')}
+          className="btn btn-ghost"
         >
-          清除
+          🗑️ 清除
         </button>
       </div>
 
-      <div className="py-12"></div>
-
-      {/* Text Areas - Clean, minimal design */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 pb-32">
+      {/* Text Areas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Original Text */}
-        <div>
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-sm font-medium" style={{ color: '#2d3748' }}>
-              原始文稿
-            </h2>
-            <span className="text-xs" style={{ color: '#a0aec0' }}>
-              {originalText.length} 字
+        <div className="card">
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <span>📝</span>
+              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>原始文稿</h3>
+            </div>
+            <span className="text-xs font-medium px-2 py-1 rounded-full"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+              {originalText.length.toLocaleString()} 字
             </span>
           </div>
-          <div className="bg-white rounded-lg overflow-hidden" style={{
-            border: '1px solid #e2e8f0',
-            height: '600px'
-          }}>
+          <div className="card-body p-0">
             <textarea
               value={originalText}
               onChange={(e) => setOriginalText(e.target.value)}
-              placeholder="貼上文稿..."
-              className="w-full h-full p-10 border-0 outline-none resize-none text-sm leading-relaxed"
+              placeholder="在此貼上或輸入您要處理的文稿..."
+              className="w-full border-0 outline-none resize-none text-sm leading-relaxed p-4"
               style={{
-                color: 'var(--nordic-text-primary)',
+                height: '500px',
+                color: 'var(--text-primary)',
                 background: 'transparent'
               }}
             />
@@ -317,33 +541,68 @@ export default function AIEditor() {
         </div>
 
         {/* Processed Text */}
-        <div>
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-sm font-medium" style={{ color: '#2d3748' }}>
-              處理後文稿
-            </h2>
-            <span className="text-xs" style={{ color: '#a0aec0' }}>
-              {processedText ? processedText.length : 0} 字
+        <div className="card">
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <span>🤖</span>
+              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>AI 處理結果</h3>
+            </div>
+            <span className="text-xs font-medium px-2 py-1 rounded-full"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+              {processedText.length.toLocaleString()} 字
             </span>
           </div>
-          <div className="bg-white rounded-lg overflow-hidden" style={{
-            border: '1px solid #e2e8f0',
-            height: '600px'
-          }}>
-            <div className="h-full overflow-y-auto p-10">
+          <div className="card-body p-0">
+            <div className="overflow-y-auto p-4" style={{ height: '500px' }}>
               {processedText ? (
-                <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--nordic-text-primary)' }}>
+                <div className="whitespace-pre-wrap text-sm leading-relaxed animate-fade-in"
+                  style={{ color: 'var(--text-primary)' }}>
                   {processedText}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--nordic-text-muted)' }}>
-                  AI 處理結果將顯示在此...
+                <div className="empty-state h-full">
+                  <div className="empty-state-icon">🤖</div>
+                  <p className="text-sm">AI 處理結果將顯示在此</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-disabled)' }}>
+                    輸入 API Key 並點擊「AI 處理文稿」開始
+                  </p>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Provider Links */}
+      <div className="mt-8 card">
+        <div className="card-header">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📚</span>
+            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>API 提供商資訊</h2>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {apiProviders.map(provider => (
+              <div key={provider.id} className="p-3 rounded-lg text-center"
+                style={{ background: 'var(--bg-tertiary)' }}>
+                <div className="text-2xl mb-2">{provider.icon}</div>
+                <div className="text-sm font-medium mb-2">{provider.name}</div>
+                <div className="flex flex-col gap-1">
+                  <a href={provider.apiKeyUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-xs underline" style={{ color: 'var(--brand-500)' }}>
+                    申請 Key
+                  </a>
+                  <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-xs underline" style={{ color: 'var(--text-muted)' }}>
+                    文件
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

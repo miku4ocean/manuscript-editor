@@ -11,13 +11,13 @@ import TabNavigation from '@/components/TabNavigation';
 import AIEditor from '@/components/AIEditor';
 
 const features = [
-  { id: 'simplified-to-traditional' as FeatureType, name: '簡體轉繁體' },
-  { id: 'add-spaces' as FeatureType, name: '英文加空白' },
-  { id: 'fix-typos' as FeatureType, name: '修正錯字' },
-  { id: 'remove-redundancy' as FeatureType, name: '刪除贅字' },
-  { id: 'fix-punctuation' as FeatureType, name: '修正標點' },
-  { id: 'segment-paragraphs' as FeatureType, name: '語義分段' },
-  { id: 'remove-timestamps' as FeatureType, name: '刪除時間戳' },
+  { id: 'simplified-to-traditional' as FeatureType, name: '簡體轉繁體', icon: '🔄', desc: '簡體中文轉換為繁體' },
+  { id: 'add-spaces' as FeatureType, name: '英文加空白', icon: '␣', desc: '中英文間自動加空格' },
+  { id: 'fix-typos' as FeatureType, name: '修正錯字', icon: '✏️', desc: '根據字典修正常見錯字' },
+  { id: 'remove-redundancy' as FeatureType, name: '刪除贅字', icon: '🗑️', desc: '移除不必要的發語詞' },
+  { id: 'fix-punctuation' as FeatureType, name: '修正標點', icon: '。', desc: '統一全形半形標點' },
+  { id: 'segment-paragraphs' as FeatureType, name: '語義分段', icon: '¶', desc: '自動分段提升可讀性' },
+  { id: 'remove-timestamps' as FeatureType, name: '刪除時間戳', icon: '⏱️', desc: '移除字幕時間標記' },
 ];
 
 export default function Home() {
@@ -29,6 +29,7 @@ export default function Home() {
   const [diffSegments, setDiffSegments] = useState<DiffSegment[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
   const [stats, setStats] = useState({ additions: 0, deletions: 0, modifications: 0 });
+  const [processingTime, setProcessingTime] = useState<number | null>(null);
 
   useEffect(() => {
     preloadDictionaries().catch(console.error);
@@ -45,6 +46,8 @@ export default function Home() {
     }
 
     setIsProcessing(true);
+    const startTime = performance.now();
+
     try {
       const result = await processText(originalText, { enabledFeatures });
       setProcessedText(result.text);
@@ -55,6 +58,7 @@ export default function Home() {
       const deletions = segments.filter(s => s.type === 'delete').length;
       const modifications = segments.filter(s => s.type !== 'equal' && s.type !== 'insert' && s.type !== 'delete').length;
       setStats({ additions, deletions, modifications });
+      setProcessingTime((performance.now() - startTime) / 1000);
     } catch (error) {
       console.error('Processing error:', error);
       alert('處理文稿時發生錯誤');
@@ -88,6 +92,7 @@ export default function Home() {
     setProcessedText('');
     setDiffSegments([]);
     setStats({ additions: 0, deletions: 0, modifications: 0 });
+    setProcessingTime(null);
   };
 
   const toggleFeature = (featureId: FeatureType) => {
@@ -100,14 +105,35 @@ export default function Home() {
     setEnabledFeatures(newFeatures);
   };
 
+  const selectAll = () => {
+    setEnabledFeatures(new Set(features.map(f => f.id)));
+  };
+
+  const clearAll = () => {
+    setEnabledFeatures(new Set());
+  };
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--nordic-bg-primary)' }}>
-      {/* Simple Header */}
-      <header className="bg-white border-b" style={{ borderColor: 'var(--nordic-border-color)' }}>
-        <div className="max-w-[1800px] mx-auto px-8 py-6">
-          <h1 className="text-xl font-semibold" style={{ color: 'var(--nordic-text-primary)' }}>
-            文字編輯神器
-          </h1>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {/* Header */}
+      <header className="header-gradient">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                style={{ background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%)' }}>
+                ✨
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  文字編輯神器
+                </h1>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  專業文稿處理工具
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -118,108 +144,143 @@ export default function Home() {
       {activeTab === 'ai' ? (
         <AIEditor />
       ) : (
-        <main className="max-w-[1400px] mx-auto px-12">
-          {/* Feature Options - Grid layout for perfect alignment */}
-          <div className="py-20 border-b" style={{ borderColor: '#f0f0f0' }}>
-            <div className="grid grid-cols-4 gap-x-12 gap-y-12 max-w-[900px] mx-auto">
-              {features.map((feature) => (
-                <label
-                  key={feature.id}
-                  className="flex items-center gap-3 cursor-pointer select-none"
-                >
-                  <input
-                    type="checkbox"
-                    checked={enabledFeatures.has(feature.id)}
-                    onChange={() => toggleFeature(feature.id)}
-                    className="w-3.5 h-3.5 cursor-pointer flex-shrink-0"
-                    style={{ accentColor: '#4a5568' }}
-                  />
-                  <span className="text-[13px] whitespace-nowrap" style={{ color: '#4a5568' }}>
-                    {feature.name}
-                  </span>
-                </label>
-              ))}
+        <main className="max-w-7xl mx-auto px-6 py-8 animate-fade-in">
+          {/* Feature Selection Card */}
+          <div className="card mb-6">
+            <div className="card-header">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚙️</span>
+                <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>處理功能</h2>
+                <span className="badge badge-brand">{enabledFeatures.size} 項已選</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={selectAll} className="btn btn-ghost text-xs">
+                  全選
+                </button>
+                <button onClick={clearAll} className="btn btn-ghost text-xs">
+                  清除
+                </button>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="feature-grid">
+                {features.map((feature) => {
+                  const isChecked = enabledFeatures.has(feature.id);
+                  return (
+                    <div
+                      key={feature.id}
+                      onClick={() => toggleFeature(feature.id)}
+                      className={`checkbox-wrapper ${isChecked ? 'checked' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleFeature(feature.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{feature.icon}</span>
+                        <span className="text-sm font-medium">{feature.name}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Action Buttons - More spacing from options */}
-          <div className="flex items-center justify-center gap-3 py-20">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-3 mb-8">
             <button
               onClick={handleProcess}
-              disabled={isProcessing}
-              className="px-10 py-2.5 text-white text-[13px] font-medium rounded-md transition-all disabled:opacity-50"
-              style={{ background: '#2d3748' }}
-              onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.background = '#1a202c')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '#2d3748')}
+              disabled={isProcessing || enabledFeatures.size === 0}
+              className="btn btn-primary px-8"
             >
-              {isProcessing ? '處理中...' : '處理文稿'}
+              {isProcessing ? (
+                <>
+                  <span className="animate-pulse">⏳</span>
+                  處理中...
+                </>
+              ) : (
+                <>
+                  <span>🚀</span>
+                  處理文稿
+                </>
+              )}
             </button>
-            <div className="w-px h-6" style={{ background: '#e2e8f0' }} />
+            <div className="divider" />
             <button
               onClick={handleCopy}
               disabled={!processedText}
-              className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all disabled:opacity-30"
-              style={{
-                background: 'transparent',
-                color: '#718096'
-              }}
-              onMouseEnter={(e) => !processedText || (e.currentTarget.style.color = '#2d3748')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#718096')}
+              className="btn btn-secondary"
             >
-              {copySuccess ? '✓ 已複製' : '複製'}
+              {copySuccess ? '✅ 已複製' : '📋 複製'}
             </button>
             <button
               onClick={handleExport}
               disabled={!processedText}
-              className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all disabled:opacity-30"
-              style={{
-                background: 'transparent',
-                color: '#718096'
-              }}
-              onMouseEnter={(e) => !processedText || (e.currentTarget.style.color = '#2d3748')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#718096')}
+              className="btn btn-secondary"
             >
-              匯出
+              📥 匯出
             </button>
             <button
               onClick={handleReset}
-              className="px-6 py-2.5 text-[13px] font-medium rounded-md transition-all"
-              style={{
-                background: 'transparent',
-                color: '#cbd5e0'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#718096')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e0')}
+              className="btn btn-ghost"
             >
-              清除
+              🗑️ 清除
             </button>
           </div>
 
-          {/* Text Areas - Clean, minimal design */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 pb-32">
+          {/* Statistics */}
+          {processedText && (
+            <div className="flex justify-center mb-6 animate-slide-up">
+              <div className="stats-group">
+                <div className="stat-item">
+                  <span className="badge badge-success">+{stats.additions}</span>
+                  <span>新增</span>
+                </div>
+                <div className="stat-item">
+                  <span className="badge badge-error">-{stats.deletions}</span>
+                  <span>刪除</span>
+                </div>
+                <div className="stat-item">
+                  <span className="badge badge-warning">~{stats.modifications}</span>
+                  <span>修改</span>
+                </div>
+                {processingTime !== null && (
+                  <div className="stat-item">
+                    <span className="badge badge-brand">{processingTime.toFixed(2)}s</span>
+                    <span>處理時間</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Text Areas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Original Text */}
-            <div>
-              <div className="flex items-center justify-between mb-12">
-                <h2 className="text-sm font-medium" style={{ color: '#2d3748' }}>
-                  原始文稿
-                </h2>
-                <span className="text-xs" style={{ color: '#a0aec0' }}>
-                  {originalText.length} 字
+            <div className="card">
+              <div className="card-header">
+                <div className="flex items-center gap-2">
+                  <span>📝</span>
+                  <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>原始文稿</h3>
+                </div>
+                <span className="text-xs font-medium px-2 py-1 rounded-full"
+                  style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+                  {originalText.length.toLocaleString()} 字
                 </span>
               </div>
-              <div className="bg-white rounded-lg overflow-hidden" style={{
-                border: '1px solid #e2e8f0',
-                height: '600px'
-              }}>
+              <div className="card-body p-0">
                 {diffSegments.length > 0 ? (
-                  <div className="h-full overflow-y-auto p-10">
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--nordic-text-primary)' }}>
+                  <div className="p-4 overflow-y-auto" style={{ height: '500px' }}>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                       {diffSegments.map((segment, index) => {
                         if (segment.type === 'equal') {
                           return <span key={index}>{segment.text}</span>;
                         } else if (segment.type === 'delete') {
                           return (
-                            <span key={index} className="font-medium px-1" style={{ background: '#fee', color: '#c55' }}>
+                            <span key={index} className="diff-delete">
                               {segment.text}
                             </span>
                           );
@@ -232,10 +293,11 @@ export default function Home() {
                   <textarea
                     value={originalText}
                     onChange={(e) => setOriginalText(e.target.value)}
-                    placeholder="貼上文稿..."
-                    className="w-full h-full p-10 border-0 outline-none resize-none text-sm leading-relaxed"
+                    placeholder="在此貼上或輸入您要處理的文稿..."
+                    className="w-full border-0 outline-none resize-none text-sm leading-relaxed p-4"
                     style={{
-                      color: 'var(--nordic-text-primary)',
+                      height: '500px',
+                      color: 'var(--text-primary)',
                       background: 'transparent'
                     }}
                   />
@@ -244,28 +306,27 @@ export default function Home() {
             </div>
 
             {/* Processed Text */}
-            <div>
-              <div className="flex items-center justify-between mb-12">
-                <h2 className="text-sm font-medium" style={{ color: '#2d3748' }}>
-                  處理後文稿
-                </h2>
-                <span className="text-xs" style={{ color: '#a0aec0' }}>
-                  {processedText ? processedText.length : 0} 字
+            <div className="card">
+              <div className="card-header">
+                <div className="flex items-center gap-2">
+                  <span>✅</span>
+                  <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>處理後文稿</h3>
+                </div>
+                <span className="text-xs font-medium px-2 py-1 rounded-full"
+                  style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
+                  {processedText.length.toLocaleString()} 字
                 </span>
               </div>
-              <div className="bg-white rounded-lg overflow-hidden" style={{
-                border: '1px solid #e2e8f0',
-                height: '600px'
-              }}>
-                <div className="h-full overflow-y-auto p-10">
+              <div className="card-body p-0">
+                <div className="overflow-y-auto p-4" style={{ height: '500px' }}>
                   {diffSegments.length > 0 ? (
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--nordic-text-primary)' }}>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                       {diffSegments.map((segment, index) => {
                         if (segment.type === 'equal') {
                           return <span key={index}>{segment.text}</span>;
                         } else if (segment.type === 'insert') {
                           return (
-                            <span key={index} className="font-medium px-1" style={{ background: '#ffc', color: '#960' }}>
+                            <span key={index} className="diff-insert">
                               {segment.text}
                             </span>
                           );
@@ -274,8 +335,12 @@ export default function Home() {
                       })}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--nordic-text-muted)' }}>
-                      處理結果將顯示在此...
+                    <div className="empty-state h-full">
+                      <div className="empty-state-icon">📄</div>
+                      <p className="text-sm">處理後的結果將顯示在此</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-disabled)' }}>
+                        選擇功能並點擊「處理文稿」開始
+                      </p>
                     </div>
                   )}
                 </div>
@@ -283,16 +348,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Statistics - Minimal design */}
-          {processedText && (
-            <div className="mt-20 flex items-center justify-center gap-8 text-xs font-medium" style={{ color: '#a0aec0' }}>
-              <span>新增 <strong style={{ color: '#48bb78' }}>{stats.additions}</strong></span>
-              <span className="opacity-30">·</span>
-              <span>刪除 <strong style={{ color: '#f56565' }}>{stats.deletions}</strong></span>
-              <span className="opacity-30">·</span>
-              <span>修改 <strong style={{ color: '#ed8936' }}>{stats.modifications}</strong></span>
+          {/* Tips Section */}
+          <div className="mt-8 p-4 rounded-xl" style={{ background: 'var(--brand-50)', border: '1px solid var(--brand-100)' }}>
+            <div className="flex items-start gap-3">
+              <span className="text-lg">💡</span>
+              <div>
+                <h4 className="font-medium text-sm mb-1" style={{ color: 'var(--brand-700)' }}>使用提示</h4>
+                <p className="text-xs" style={{ color: 'var(--brand-600)' }}>
+                  建議先使用「簡體轉繁體」功能，再配合其他處理選項。處理完成後，變更處會以顏色標示：
+                  <span className="diff-insert mx-1">綠色為新增</span>
+                  <span className="diff-delete mx-1">紅色為刪除</span>
+                </p>
+              </div>
             </div>
-          )}
+          </div>
         </main>
       )}
     </div>

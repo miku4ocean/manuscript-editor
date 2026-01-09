@@ -1,294 +1,263 @@
-# 安全性審查報告
+# 安全性審計報告
 
-**審查日期**: 2025-01-01
-**審查範圍**: AI 輔助編輯器功能
-**重點**: API Key 安全性
-
----
-
-## ✅ 安全措施清單
-
-### 1. API Key 儲存方式
-
-#### ✅ 本地儲存 (localStorage)
-- **位置**: 瀏覽器 localStorage
-- **Key 格式**: `ai-editor-apikey-{provider}`
-- **實作檔案**: `components/AIEditor.tsx:17, 184-186`
-- **不會上傳**: ✅ API Key 永遠不會傳送到我們的伺服器進行儲存
-
-```typescript
-// 從 localStorage 讀取
-const savedApiKey = localStorage.getItem(`ai-editor-apikey-${apiProvider}`);
-
-// 儲存到 localStorage
-localStorage.setItem(`ai-editor-apikey-${apiProvider}`, newKey);
-
-// 刪除 API Key
-localStorage.removeItem(`ai-editor-apikey-${apiProvider}`);
-```
-
-#### ❌ 不會儲存在以下位置：
-- ❌ 伺服器端資料庫
-- ❌ 後端 session
-- ❌ Cookie (雖然可用，但我們選擇 localStorage)
-- ❌ Git 儲存庫
-- ❌ 環境變數檔案 (.env)
+> 審計日期：2026 年 1 月 9 日
+> 審計範圍：API Key 安全、資料傳輸、本地儲存
 
 ---
 
-### 2. API Key 傳輸方式
+## 📋 安全性審計摘要
 
-#### ✅ HTTPS POST Request
-- **傳輸方式**: HTTPS POST body (JSON)
-- **目的地**: 直接傳送到 AI 提供商 API
-- **中繼**: 透過我們的 API 路由 (`/api/ai-process`)
-- **不記錄**: ✅ 伺服器端不記錄 API Key
+| 項目 | 狀態 | 風險等級 |
+|------|------|----------|
+| API Key 儲存 | ✅ 通過 | 低 |
+| 資料傳輸安全 | ✅ 通過 | 低 |
+| 程式碼安全 | ✅ 通過 | 低 |
+| Git 歷史安全 | ✅ 通過 | 低 |
+| 部署安全 | ✅ 通過 | 低 |
 
-```typescript
-// 前端傳送 (components/AIEditor.tsx:71-82)
-const response = await fetch('/api/ai-process', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    provider: apiProvider,
-    apiKey,  // ⚠️ 透過 HTTPS 加密傳輸
-    model,
-    text: originalText,
-    features: enabledFeatures,
-  }),
-});
-
-// 後端接收並轉發 (app/api/ai-process/route.ts:231)
-const { provider, apiKey, model, text, features } = body;
-// 立即使用，不儲存
-processedText = await processWithOpenAI(apiKey, model, prompt);
-```
+**整體評分：🛡️ 安全**
 
 ---
 
-### 3. 錯誤處理與日誌安全
+## 1. API Key 儲存安全
 
-#### ✅ 敏感資訊清理
-**實作位置**: `app/api/ai-process/route.ts:271-292`
+### 儲存機制
+
+- **儲存位置**：瀏覽器 `localStorage`
+- **儲存格式**：`ai-editor-apikey-{provider}`
+- **生命週期**：直到使用者清除瀏覽器資料
+
+### 安全特性
+
+| 特性 | 狀態 |
+|------|------|
+| 不上傳至伺服器 | ✅ |
+| 不存入資料庫 | ✅ |
+| 不記錄至日誌 | ✅ |
+| 每個提供商獨立儲存 | ✅ |
+
+### 程式碼驗證
 
 ```typescript
-// 清理可能包含 API Key 的錯誤訊息
-const sanitizedMessage = errorMessage
-  .replace(/sk-[a-zA-Z0-9-_]+/g, '[REDACTED]')  // OpenAI/DeepSeek keys
-  .replace(/Bearer\s+[a-zA-Z0-9-_\.]+/g, 'Bearer [REDACTED]')  // Bearer tokens
-  .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-_]+/gi, 'api_key: [REDACTED]');  // API key patterns
-
-// 只在開發環境記錄
-if (process.env.NODE_ENV === 'development') {
-  console.error('AI processing error (sanitized):', sanitizedMessage);
+// AIEditor.tsx - localStorage 只在客戶端使用
+if (typeof window !== 'undefined') {
+  const savedApiKey = localStorage.getItem(`ai-editor-apikey-${apiProvider}`);
+  // ...
 }
 ```
 
-#### ✅ 前端錯誤處理
-**實作位置**: `components/AIEditor.tsx:89-92`
+### 清除方式
 
-```typescript
-// 不在 console 記錄可能包含 API Key 的錯誤
-const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-alert(`處理文稿時發生錯誤: ${errorMessage}`);
-```
+使用者可透過以下方式清除 API Key：
+1. 清除 input 欄位（自動從 localStorage 刪除）
+2. 清除瀏覽器資料
+3. 使用開發者工具手動清除
 
 ---
 
-### 4. Git 儲存庫安全
+## 2. 資料傳輸安全
 
-#### ✅ .gitignore 設定
-**檔案**: `.gitignore:34`
+### 部署模式分析
 
-```gitignore
+#### GitHub Pages 部署（純前端）
+
+當部署至 GitHub Pages 時：
+- ✅ API 請求直接從瀏覽器發送至 AI 提供商
+- ✅ 不經過任何中間伺服器
+- ✅ API Key 不會被第三方攔截
+- ✅ 所有通訊使用 HTTPS 加密
+
+```
+使用者瀏覽器 ──HTTPS──> AI 提供商 (OpenAI/Claude/etc.)
+```
+
+#### 自託管部署（有後端）
+
+當使用 `npm run dev` 或 Next.js 伺服器時：
+- ⚠️ API 請求經過 Next.js API route
+- ✅ API Key 僅在記憶體中暫存
+- ✅ 錯誤訊息已清理敏感資訊
+- ✅ 不記錄 API Key 至日誌
+
+### 傳輸加密
+
+| 環節 | 加密狀態 |
+|------|----------|
+| 瀏覽器 → GitHub Pages | ✅ HTTPS |
+| 瀏覽器 → AI API | ✅ HTTPS |
+| localStorage | ⚠️ 本地明文（瀏覽器標準行為）|
+
+---
+
+## 3. 程式碼安全措施
+
+### 錯誤處理安全
+
+API route 已實作 API Key 清理：
+
+```typescript
+// app/api/ai-process/route.ts
+const sanitizedMessage = errorMessage
+  .replace(/sk-[a-zA-Z0-9-_]+/g, '[REDACTED]')
+  .replace(/Bearer\s+[a-zA-Z0-9-_\.]+/g, 'Bearer [REDACTED]')
+  .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-_]+/gi, 'api_key: [REDACTED]');
+```
+
+### XSS 防護
+
+- ✅ React 預設 escape 所有輸出
+- ✅ 未使用 `dangerouslySetInnerHTML`
+- ✅ 所有使用者輸入都經過 React 處理
+
+### CSRF 防護
+
+- ✅ API route 只接受 POST 請求
+- ✅ 使用 JSON body，不使用 form data
+
+---
+
+## 4. Git 歷史安全
+
+### 已驗證項目
+
+- ✅ `.gitignore` 包含 `.env*` 檔案
+- ✅ 程式碼中無寫死的 API Key
+- ✅ 無敏感資訊提交歷史
+
+### .gitignore 內容
+
+```
 # env files (can opt-in for committing if needed)
 .env*
 ```
 
-#### ✅ 檢查結果
-```bash
-# 確認沒有 .env 檔案被追蹤
-$ git ls-files | grep -E "\.env"
-# (無結果 - 安全✅)
+---
 
-# 確認沒有 API Key 在程式碼中
-$ git grep -i "sk-" -- "*.ts" "*.tsx" "*.js" "*.jsx"
-# (無結果 - 安全✅)
+## 5. 部署安全建議
+
+### GitHub Pages 部署（推薦）
+
+優點：
+- 純靜態檔案，無伺服器端程式碼執行
+- API Key 完全在使用者控制下
+- 無資料庫，無日誌收集
+
+### 自託管部署
+
+如需使用 API route 功能：
+- 確保使用 HTTPS
+- 不記錄請求 body
+- 定期更新依賴套件
+
+---
+
+## 6. 安全建議給使用者
+
+### ✅ 建議做法
+
+1. **設定 API 用量上限**
+   - 在各提供商後台設定每月用量上限
+   - 避免意外超額使用
+
+2. **使用專用 API Key**
+   - 為此應用建立專用 Key
+   - 不要使用主帳號的 Key
+
+3. **定期輪換 Key**
+   - 建議每 3-6 個月更換
+   - 發現異常立即更換
+
+4. **監控使用量**
+   - 定期檢查各提供商的使用統計
+   - 開啟異常用量警報
+
+### ❌ 避免做法
+
+1. **不要在公用電腦使用**
+   - 公用電腦可能有鍵盤記錄器
+   - 使用後務必清除瀏覽器資料
+
+2. **不要分享瀏覽器**
+   - localStorage 資料可被同一瀏覽器的其他使用者讀取
+
+3. **不要截圖 API Key**
+   - 截圖可能被雲端同步
+   - 避免任何形式的 Key 外洩
+
+---
+
+## 7. 技術實作細節
+
+### localStorage 鍵值
+
+| 鍵名 | 內容 |
+|------|------|
+| `ai-editor-apikey-openai` | OpenAI API Key |
+| `ai-editor-apikey-anthropic` | Anthropic API Key |
+| `ai-editor-apikey-google` | Google API Key |
+| `ai-editor-apikey-xai` | xAI API Key |
+| `ai-editor-apikey-deepseek` | DeepSeek API Key |
+| `manuscript-editor-history` | 處理歷史記錄 |
+
+### API 請求流程
+
+```
+1. 使用者輸入文稿
+2. 從 localStorage 讀取 API Key
+3. 建構請求 payload
+4. 發送至 AI 提供商 API
+5. 接收處理結果
+6. 顯示於介面
 ```
 
----
-
-### 5. API 路由安全分析
-
-#### ✅ 不儲存 API Key
-**檔案**: `app/api/ai-process/route.ts`
-
-**API 路由流程**:
-1. ✅ 接收 API Key (line 231)
-2. ✅ 驗證輸入 (line 234-239)
-3. ✅ 立即使用，傳送到 AI 提供商 (line 249-261)
-4. ✅ 返回處理結果 (line 270)
-5. ✅ **不儲存到任何持久化儲存**
-
-**支援的 AI 提供商**:
-- OpenAI → `https://api.openai.com/v1/chat/completions`
-- Anthropic → `https://api.anthropic.com/v1/messages`
-- Google Gemini → `https://generativelanguage.googleapis.com/v1beta/models/...`
-- xAI Grok → `https://api.x.ai/v1/chat/completions`
-- DeepSeek → `https://api.deepseek.com/v1/chat/completions`
+**注意**：API Key 不會被快取、不會被記錄、不會被傳輸至任何非 AI 提供商的伺服器。
 
 ---
 
-### 6. 前端安全措施
+## 8. 已知限制
 
-#### ✅ API Key 顯示/隱藏
-**檔案**: `components/AIEditor.tsx:178-201`
+### localStorage 明文儲存
 
-```tsx
-<input
-  type={showApiKey ? 'text' : 'password'}  // 預設隱藏
-  value={apiKey}
-  onChange={(e) => { ... }}
-  placeholder="請輸入 API Key"
-/>
-<button onClick={() => setShowApiKey(!showApiKey)}>
-  {showApiKey ? '隱藏' : '顯示'}
-</button>
-```
+**情況**：localStorage 中的資料以明文儲存
 
-#### ✅ 清除 API Key 功能
-使用者可隨時清空 API Key 輸入框，自動從 localStorage 刪除：
+**風險**：
+- 同一瀏覽器的其他網站無法讀取（同源政策保護）
+- 本機惡意軟體理論上可讀取
 
-```typescript
-if (newKey) {
-  localStorage.setItem(`ai-editor-apikey-${apiProvider}`, newKey);
-} else {
-  localStorage.removeItem(`ai-editor-apikey-${apiProvider}`);
-}
-```
+**緩解措施**：
+- 這是瀏覽器標準行為
+- 可選未來實作：使用 Web Crypto API 加密
+
+### 瀏覽器擴充功能
+
+**風險**：惡意擴充功能可能讀取 localStorage
+
+**建議**：
+- 只安裝可信任的瀏覽器擴充功能
+- 考慮使用無擴充功能的瀏覽器設定檔
 
 ---
 
-## 🔍 潛在風險評估
+## 9. 審計結論
 
-### 低風險 ⚠️
+本應用程式已採取合理的安全措施保護使用者的 API Key：
 
-#### 1. localStorage 安全性
-- **風險**: 同源 JavaScript 可訪問 localStorage
-- **影響範圍**: 僅限使用者自己的瀏覽器
-- **緩解措施**:
-  - 不在公用電腦儲存 API Key
-  - 提供清除功能
-  - 使用者教育（文件說明）
+1. **無伺服器儲存**：API Key 只存在使用者本地
+2. **直接通訊**：請求直接發送至 AI 提供商
+3. **錯誤清理**：敏感資訊不會出現在錯誤訊息中
+4. **標準實踐**：遵循業界最佳實踐
 
-#### 2. HTTPS 傳輸
-- **風險**: 需要 HTTPS 連線
-- **影響範圍**: HTTP 下傳輸不安全
-- **緩解措施**:
-  - Next.js 預設使用 HTTPS (生產環境)
-  - Vercel/GitHub Pages 強制 HTTPS
-
-#### 3. XSS 攻擊
-- **風險**: 如果網站有 XSS 漏洞，localStorage 可被讀取
-- **影響範圍**: 使用者的 API Key 可能洩露
-- **緩解措施**:
-  - React 預設 XSS 防護
-  - 不使用 `dangerouslySetInnerHTML`
-  - 輸入驗證
+**評定：適合公開發布至 GitHub 供他人使用。**
 
 ---
 
-## ✅ 安全性測試結果
+## 10. 版本歷史
 
-### 1. API Key 不會出現在 Git
-```bash
-✅ git grep -E "sk-[a-zA-Z0-9]+" -- "*.ts" "*.tsx" "*.js"
-   # 無結果
-
-✅ git log -p | grep -E "sk-[a-zA-Z0-9]+"
-   # 無結果
-```
-
-### 2. 環境變數檔案已忽略
-```bash
-✅ cat .gitignore | grep env
-   .env*
-```
-
-### 3. API Key 不會在 Console 記錄
-```bash
-✅ 搜尋所有 console.error 和 console.log
-   # 所有記錄都已清理敏感資訊
-```
-
-### 4. 錯誤訊息已清理
-```bash
-✅ 測試情境：輸入錯誤 API Key
-   結果：錯誤訊息中不包含實際 API Key
-   顯示：[REDACTED]
-```
+| 版本 | 日期 | 審計人 | 備註 |
+|------|------|--------|------|
+| 1.0 | 2026-01-09 | AI Assistant | 初始審計 |
 
 ---
 
-## 📝 使用者安全建議
-
-### ✅ 已在文件中說明
-
-**檔案**: `AI_EDITOR_GUIDE.md:97-126`
-
-1. **API Key 儲存方式**
-   - 只儲存在瀏覽器 localStorage
-   - 不會上傳到伺服器
-
-2. **注意事項**
-   - 不要在公用電腦上儲存 API Key
-   - 定期更換 API Key
-   - 如果 Key 洩漏，立即刪除
-
-3. **清除 API Key 方法**
-   - 方法 1: 清空輸入框
-   - 方法 2: 清除瀏覽器資料
-   - 方法 3: 手動刪除 localStorage
-
----
-
-## 🎯 結論
-
-### ✅ 安全性評分: 9/10
-
-#### 優點 ✅
-1. ✅ API Key 只儲存在本地 localStorage
-2. ✅ 不會上傳到任何伺服器進行儲存
-3. ✅ .env 檔案已在 .gitignore
-4. ✅ 錯誤訊息已清理敏感資訊
-5. ✅ 只在開發環境記錄錯誤
-6. ✅ 提供清除 API Key 功能
-7. ✅ 使用者可隨時查看/隱藏 API Key
-8. ✅ HTTPS 加密傳輸
-
-#### 改進建議 💡
-1. 可考慮添加 API Key 加密（localStorage 加密）
-2. 可考慮添加 API Key 過期機制
-3. 可考慮添加使用量追蹤（本地）
-
----
-
-## 📋 安全性檢查清單
-
-- [x] API Key 只儲存在 localStorage
-- [x] API Key 不會上傳到 GitHub
-- [x] .env 檔案在 .gitignore
-- [x] 錯誤訊息不包含 API Key
-- [x] Console.log 不記錄 API Key
-- [x] HTTPS 傳輸
-- [x] 提供清除功能
-- [x] 使用者文件完整
-- [x] XSS 防護 (React 預設)
-- [x] 輸入驗證
-
----
-
-**審查結果**: ✅ **通過**
-**審查人員**: Claude Sonnet 4.5
-**下次審查**: 每次重大更新後
-
+如有安全疑慮，請提交 Issue 至：
+https://github.com/miku4ocean/manuscript-editor/issues
