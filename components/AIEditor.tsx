@@ -250,11 +250,11 @@ export default function AIEditor() {
     setActualCost(null);
   };
 
-  // 格式化金額顯示
+  // 格式化金額顯示 (USD 美元)
   const formatCost = (cost: number): string => {
-    if (cost < 0.0001) return '< $0.0001';
-    if (cost < 0.01) return `$${cost.toFixed(4)}`;
-    return `$${cost.toFixed(4)}`;
+    if (cost < 0.0001) return '< USD $0.0001';
+    if (cost < 0.01) return `USD $${cost.toFixed(4)}`;
+    return `USD $${cost.toFixed(4)}`;
   };
 
   return (
@@ -324,7 +324,7 @@ export default function AIEditor() {
             {currentModel && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  定價 (每百萬 tokens)
+                  定價 USD (每百萬 tokens)
                 </label>
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
                   style={{ background: 'var(--bg-tertiary)' }}>
