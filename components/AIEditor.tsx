@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { processTextWithAI, type AIProcessRequest } from '@/lib/aiProviders';
 
 // 最新 API 提供商和模型資訊 (2025年1月更新)
 const apiProviders = [
@@ -23,11 +24,9 @@ const apiProviders = [
     name: 'Anthropic Claude',
     icon: '🟠',
     models: [
-      { id: 'claude-sonnet-4-5-20250514', name: 'Claude 4.5 Sonnet', inputPrice: 3.00, outputPrice: 15.00 },
-      { id: 'claude-haiku-4-5-20250514', name: 'Claude 4.5 Haiku', inputPrice: 1.00, outputPrice: 5.00 },
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', inputPrice: 3.00, outputPrice: 15.00 },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', inputPrice: 0.80, outputPrice: 4.00 },
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', inputPrice: 15.00, outputPrice: 75.00 },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', inputPrice: 3.00, outputPrice: 15.00 },
+      { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', inputPrice: 5.00, outputPrice: 25.00 },
+      { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', inputPrice: 1.00, outputPrice: 5.00 },
     ],
     docsUrl: 'https://docs.anthropic.com/claude/docs',
     apiKeyUrl: 'https://console.anthropic.com/settings/keys',
@@ -184,24 +183,15 @@ export default function AIEditor() {
     setActualCost(null);
 
     try {
-      const response = await fetch('/api/ai-process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: apiProvider,
-          apiKey,
-          model: modelId,
-          text: originalText,
-          features: enabledFeatures,
-        }),
+      // 靜態部署（GitHub Pages）沒有伺服器可代理：
+      // 一律從瀏覽器直連各供應商官方 API（BYOK，金鑰不經任何第三方伺服器）
+      const data = await processTextWithAI({
+        provider: apiProvider as AIProcessRequest['provider'],
+        apiKey,
+        model: modelId,
+        text: originalText,
+        features: enabledFeatures,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'API 請求失敗');
-      }
-
-      const data = await response.json();
       setProcessedText(data.processedText);
 
       // 計算實際成本
