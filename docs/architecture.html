@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>manuscript-editor — 架構圖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --paper:#FBFAF7; --ink:#181B20; --muted:#6B7178;
+    --line:#E7E3DA; --accent:#2E4B8F; --accent-soft:#EAEEF7;
+    --ok:#1F7A54; --err:#B03A2E; --warn:#B8860B;
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); line-height:1.6;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:48px 28px 96px;}
+  header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--line); padding-bottom:22px; margin-bottom:36px; flex-wrap:wrap; gap:12px;
+  }
+  .wordmark{font-family:var(--serif); font-size:30px; font-weight:600;}
+  .wordmark .dot{color:var(--accent);}
+  .subtitle{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);}
+  h2.section{
+    font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); margin:56px 0 16px; display:flex; align-items:center; gap:10px;
+  }
+  h2.section:first-of-type{margin-top:0;}
+  h2.section::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  .meta{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:4px;}
+
+  .layers{display:flex; flex-direction:column; gap:0;}
+  .layer{
+    background:var(--paper); border:1px solid var(--line); border-radius:9px;
+    padding:18px 22px; position:relative;
+  }
+  .layer + .arrow{
+    display:flex; justify-content:center; padding:6px 0; color:var(--accent);
+    font-family:var(--mono); font-size:14px;
+  }
+  .layer-head{display:flex; align-items:baseline; gap:10px; margin-bottom:6px; flex-wrap:wrap;}
+  .layer-num{font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:.08em;}
+  .layer-title{font-weight:600; font-size:15px;}
+  .layer-tag{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--line); border-radius:99px; padding:2px 9px;
+  }
+  .layer-body{font-size:13.5px; color:var(--ink);}
+  .layer-body .file{font-family:var(--mono); font-size:12.5px; background:var(--accent-soft); color:var(--accent); padding:1px 6px; border-radius:4px;}
+  .layer-body ul{margin:8px 0 0; padding-left:18px;}
+  .layer-body li{margin:3px 0;}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .row .layer{margin:0;}
+  .sub{color:var(--muted); font-size:12.5px; margin-top:6px;}
+
+  .dead .layer-title{color:var(--muted);}
+  .dead{border-style:dashed; background:transparent;}
+  .dead .layer-body{color:var(--muted);}
+
+  .status{font-family:var(--mono); font-size:12px;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--err);}
+  .status.warn{color:var(--warn);}
+  .status.progress{color:var(--accent);}
+
+  .keystone{
+    margin-top:44px; border:2px solid var(--accent); background:var(--accent-soft);
+    border-radius:10px; padding:22px 26px;
+  }
+  .keystone .kicker{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:8px;
+  }
+  .keystone h3{margin:0 0 8px; font-size:17px;}
+  .keystone p{margin:0 0 8px; font-size:13.5px;}
+
+  .warn-box{
+    margin-top:16px; border:2px solid var(--err); background:var(--paper);
+    border-radius:10px; padding:20px 26px;
+  }
+  .warn-box .kicker{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--err); margin-bottom:8px;
+  }
+  .warn-box p{margin:0 0 8px; font-size:13.5px;}
+  .warn-box code{font-family:var(--mono); font-size:12px; background:#fff; border:1px solid var(--line); padding:1px 6px; border-radius:4px;}
+
+  .buildlog{
+    font-family:var(--mono); font-size:12px; background:var(--ink); color:var(--paper);
+    border-radius:9px; padding:16px 20px; margin-top:14px; overflow-x:auto; white-space:pre;
+  }
+  .buildlog .ok{color:#7fd9ac;}
+  .buildlog .err{color:#f0a99a;}
+  .buildlog .muted{color:#9aa0a8;}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width: 860px){ .row, .grid3{grid-template-columns:1fr;} }
+
+  footer{margin-top:64px; border-top:1px solid var(--line); padding-top:16px; font-family:var(--mono); font-size:11px; color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="wordmark">Manuscript<span class="dot">.</span></div>
+      <div class="subtitle">manuscript-editor — architecture</div>
+    </div>
+    <div class="meta">
+      /Users/leonalin/Code/manuscript-editor<br/>
+      繪製依據：實際程式碼 + 本機 <code style="font-family:var(--mono)">npm run build</code> 實測（2026-07-24）
+    </div>
+  </header>
+
+  <h2 class="section">▸ 架構總覽（由上而下，5 層）</h2>
+  <div class="sub" style="margin-bottom:18px;">
+    此圖依 manuscript-editor 真實程式碼調整層名——它是一個「絕大部分純前端 + 一條可選的動態 API 代理」的 Next.js 應用，不是傳統 Worker／佇列型後端。
+  </div>
+
+  <div class="layers">
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">① 使用者／瀏覽器</span>
+        <span class="layer-title">前端頁面 — 單一路由、分頁切換</span>
+        <span class="layer-tag">'use client'</span>
+      </div>
+      <div class="layer-body">
+        <span class="file">app/page.tsx</span> 是唯一頁面，透過 <span class="file">components/TabNavigation.tsx</span> 切換兩個分頁（無其他 URL 路由，App Router 只有一個 <span class="file">/</span>）：
+        <ul>
+          <li><b>分頁 A · 字典工具</b>（預設）— 7 項規則式功能勾選、雙欄原文／處理後文字、diff 高亮、統計列</li>
+          <li><b>分頁 B · AI 輔助編輯</b>（標示 PRO）— <span class="file">components/AIEditor.tsx</span>，5 家供應商 × 模型選單、API Key 輸入、成本試算</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">② 前端邏輯層</span>
+        <span class="layer-title">處理器編排 + 差異計算 + 匯出</span>
+      </div>
+      <div class="layer-body">
+        <span class="file">lib/textProcessor.ts</span> 依序編排 <b>8 個</b> processor（比 README 記載的 7 個多一個 <span class="file">removeSpaces.ts</span>）：
+        簡繁轉換／英文加空白／修正錯字／刪除贅字／修正標點／語義分段／刪除時間戳／移除多餘空白。
+        <br/>另有 <span class="file">lib/diffUtils.ts</span>（diff-match-patch）與 <span class="file">lib/exportUtils.ts</span>（複製／匯出 txt·md）。
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="row">
+      <div class="layer dead">
+        <div class="layer-head">
+          <span class="layer-num">② 附註</span>
+          <span class="layer-title">已確認的死碼（未被任何路由引用）</span>
+        </div>
+        <div class="layer-body">
+          <span class="file">Editor.tsx</span> <span class="file">FeatureToggles.tsx</span> <span class="file">TextAreas.tsx</span>
+          <span class="file">ActionButtons.tsx</span> <span class="file">Statistics.tsx</span> <span class="file">HistoryPanel.tsx</span>
+          <span class="file">DiffDisplay.tsx</span> <span class="file">ThemeProvider.tsx</span>、<span class="file">lib/storageUtils.ts</span>
+          <div class="sub">grep 全 app/ 確認：以上檔案皆有程式碼與測試，但無任何 import 引用 — 是 RPD.md 原始設計（Editor 為狀態核心）留下的殘骸，現行 UI 已改為 page.tsx + AIEditor.tsx 內聯管理狀態。歷史記錄功能因此「有測試、無介面」。</div>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-head">
+          <span class="layer-num">③ 靜態資料層</span>
+          <span class="layer-title">public/dictionaries/*.json（瀏覽器 fetch）</span>
+        </div>
+        <div class="layer-body">
+          runtime 實際被 processor 讀取的只有 3 個：<span class="file">typo-dictionary.json</span>
+          <span class="file">redundancy-dictionary.json</span> <span class="file">s2t-dictionary.json</span>
+          <div class="sub">目錄下另有 7 個 json（valid-words / typo-corrections(-clean) / redundancy-dictionary-expanded / dict-sample / dict-column-info / variant-characters），為 <span class="file">scripts/extract-typo-dict.js</span>、<span class="file">scripts/parse-dict.js</span> 的原始或中繼產出，前端程式未引用。</div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">④ API 層（僅動態伺服器模式可用）</span>
+        <span class="layer-title">app/api/ai-process/route.ts — Next.js Route Handler</span>
+        <span class="layer-tag">POST</span>
+      </div>
+      <div class="layer-body">
+        接收瀏覽器送來的 <code style="font-family:var(--mono)">{provider, apiKey, model, text, features}</code>，組成中文 prompt 後依 provider 分派到對應 <span class="file">processWithXxx()</span> 函式；回應前用 regex 遮罩錯誤訊息中可能出現的
+        <code style="font-family:var(--mono)">sk-…</code> / <code style="font-family:var(--mono)">Bearer …</code> 字串，避免金鑰外洩到 log。
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="layer">
+      <div class="layer-head">
+        <span class="layer-num">⑤ 外部依賴</span>
+        <span class="layer-title">五家 LLM API（使用者自帶金鑰 BYOK）</span>
+      </div>
+      <div class="layer-body">
+        <div class="grid3" style="margin-top:8px;">
+          <div>🟢 OpenAI</div>
+          <div>🟠 Anthropic Claude</div>
+          <div>🔵 Google Gemini</div>
+          <div>⚫ xAI Grok</div>
+          <div>🟣 DeepSeek</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section">▸ Keystone 決定與已驗證的架構張力</h2>
+
+  <div class="keystone">
+    <div class="kicker">KEYSTONE DECISION</div>
+    <h3>純靜態匯出（<code style="font-family:var(--mono)">next.config.ts</code> → <code style="font-family:var(--mono)">output: 'export'</code>）</h3>
+    <p>RPD.md 明文記載理由：免費、無需伺服器、可部署在 GitHub Pages、離線可用、無後端追蹤。7 個規則式功能因此可以完全在瀏覽器端跑，字典即 JSON 靜態資源，這是本專案最初、也是至今仍然生效的核心決定。</p>
+    <p>後來新增的「AI 輔助編輯」分頁（<span class="file">app/api/ai-process/route.ts</span>）需要一個真正的伺服器來代理呼叫 LLM——這與「純靜態」的 keystone 決定直接衝突。</p>
+  </div>
+
+  <div class="warn-box">
+    <div class="kicker">⚠ 已用實測驗證的矛盾（非臆測）</div>
+    <p>在本機對這個專案實際執行 <code>npm run build</code>，輸出如下：</p>
+    <div class="buildlog">Route (app)
+┌ <span class="ok">○</span> /
+├ <span class="ok">○</span> /_not-found
+└ <span class="err">ƒ</span> /api/ai-process
+
+<span class="muted">○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand</span></div>
+    <p style="margin-top:10px;">再檢查 <code>out/</code> 目錄（GitHub Actions 實際上傳到 GitHub Pages 的內容）：其中<b>沒有</b> <code>api/</code> 資料夾 — <code>/api/ai-process</code> 被標記為 Dynamic，靜態匯出時被整條路徑捨棄，build 本身不報錯也不警告。</p>
+    <p><b>結論：</b>正式部署站台 <code>https://miku4ocean.github.io/manuscript-editor/</code> 上，「AI 輔助編輯」分頁按下處理按鈕時，<code>fetch('/api/ai-process')</code> 會打到一個不存在的路徑（404），功能實際不可用。這條路徑只有在 <code>npm run dev</code> 或 <code>npm run start</code>（Node 伺服器模式）下才會真的運作。README / PROJECT_SUMMARY 等文件都未提及此限制。</p>
+  </div>
+
+  <h2 class="section">▸ 資料流（由使用者操作出發）</h2>
+  <div class="layer">
+    <div class="layer-body">
+      <b>字典工具分頁：</b>使用者貼上文字 → 勾選功能 → <span class="file">textProcessor.ts</span> 依序呼叫 processors（視需要 fetch 對應字典 json）→ 產出結果 → <span class="file">diffUtils.ts</span> 計算差異 → 畫面顯示高亮 + 統計。全程瀏覽器端執行，無網路需求（首次載入頁面／字典除外）。
+      <br/><br/>
+      <b>AI 輔助編輯分頁：</b>使用者在瀏覽器輸入 API Key（存 localStorage，<i>不</i>上傳伺服器）→ 選 provider/model → 按下處理 → 瀏覽器把 <code style="font-family:var(--mono)">{apiKey, model, text, features}</code> 整包 POST 到 <span class="file">/api/ai-process</span> → route.ts 組 prompt 轉發給對應 LLM → 回應逐次轉發回瀏覽器（不落地儲存文稿或金鑰）→（<b>僅在動態伺服器模式下</b>）畫面顯示 AI 處理結果與成本試算。
+    </div>
+  </div>
+
+  <footer>
+    manuscript-editor · architecture.html · 內容全部來自實際讀取的程式碼與本機建置實測，查無佐證處已標「未確認」或省略 · 2026-07-24
+  </footer>
+
+</div>
+</body>
+</html>

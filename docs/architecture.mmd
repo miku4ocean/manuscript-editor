@@ -1,0 +1,63 @@
+%% manuscript-editor — 真實架構（依實際程式碼與 npm run build 驗證繪製，2026-07-24）
+%% 使用方式：貼進任何 mermaid 渲染器（mermaid.live、VS Code mermaid 外掛等）
+flowchart TB
+
+  subgraph L1["① 使用者／瀏覽器（前端頁面）"]
+    P["app/page.tsx（單一 client 元件）\n由 TabNavigation.tsx 切換兩分頁"]
+    T1["分頁 A｜字典工具（預設）"]
+    T2["分頁 B｜AI 輔助編輯（PRO 標）\ncomponents/AIEditor.tsx"]
+    P --> T1
+    P --> T2
+  end
+
+  subgraph L2["② 前端邏輯層"]
+    TP["lib/textProcessor.ts\n編排 8 個 processors"]
+    DIFF["lib/diffUtils.ts\n(diff-match-patch)"]
+    EXP["lib/exportUtils.ts\n複製／匯出 txt-md"]
+    DEAD["死碼（未被任何路由引用）\nEditor / FeatureToggles / TextAreas /\nActionButtons / Statistics / HistoryPanel /\nDiffDisplay / ThemeProvider.tsx\nstorageUtils.ts（歷史記錄邏輯，無 UI 串接）"]
+  end
+
+  subgraph L3["③ 靜態資料層（瀏覽器 fetch）"]
+    DICT["public/dictionaries/*.json\n實際被引用：typo-dictionary.json\nredundancy-dictionary.json／s2t-dictionary.json"]
+    RAW["其餘 7 個 json（valid-words／typo-corrections 等）\n為字典產生腳本之原始／中繼資料，前端未引用"]
+  end
+
+  subgraph L4["④ API 層（僅動態伺服器模式可用）"]
+    API["app/api/ai-process/route.ts\nNext.js Route Handler（POST）\n組 prompt → 依 provider 分派 → 遮罩錯誤中的金鑰字串"]
+  end
+
+  subgraph L5["⑤ 外部依賴（使用者自帶金鑰 BYOK）"]
+    OAI["OpenAI"]
+    ANT["Anthropic Claude"]
+    GOO["Google Gemini"]
+    XAI["xAI Grok"]
+    DS["DeepSeek"]
+  end
+
+  T1 --> TP --> DICT
+  TP --> DIFF --> T1
+  T1 --> EXP
+
+  T2 -- "fetch('/api/ai-process')\n含使用者 localStorage 中的 API Key" --> API
+  API --> OAI
+  API --> ANT
+  API --> GOO
+  API --> XAI
+  API --> DS
+
+  KEYSTONE["🔑 KEYSTONE 決定：純靜態匯出（next.config.ts output:'export'）\n為了免費部署到 GitHub Pages，全站預設無伺服器"]
+  WARN["⚠️ 已用 npm run build 實測驗證：\n/api/ai-process 被標記為 ƒ Dynamic，\n不會出現在 out/ 目錄中 →\n正式站台（GitHub Pages）上「AI 輔助編輯」分頁\nfetch 會 404、實際不可用；\n僅 npm run dev／npm run start（Node 伺服器模式）下才真的能動"]
+
+  KEYSTONE -.->|"決定"| L1
+  KEYSTONE -.->|"矛盾"| WARN
+  WARN -.->|"影響"| T2
+
+  classDef layer fill:#FBFAF7,stroke:#E7E3DA,color:#181B20;
+  classDef keystone fill:#EAEEF7,stroke:#2E4B8F,stroke-width:2px,color:#181B20;
+  classDef warn fill:#FBFAF7,stroke:#B03A2E,stroke-width:2px,color:#B03A2E;
+  classDef dead fill:#FBFAF7,stroke:#6B7178,stroke-dasharray: 4 3,color:#6B7178;
+
+  class P,T1,T2,TP,DIFF,EXP,DICT,RAW,API,OAI,ANT,GOO,XAI,DS layer;
+  class DEAD dead;
+  class KEYSTONE keystone;
+  class WARN warn;

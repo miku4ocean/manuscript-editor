@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 1720" font-family="ui-sans-serif,system-ui,'Segoe UI',Roboto,'Noto Sans TC',sans-serif">
+  <title>manuscript-editor — 架構圖</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2E4B8F"/>
+    </marker>
+    <marker id="arrow-err" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B03A2E"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1160" height="1720" fill="#FBFAF7"/>
+
+  <!-- header -->
+  <text x="40" y="52" font-family="Georgia,'Iowan Old Style','Times New Roman',serif" font-size="28" font-weight="600" fill="#181B20">Manuscript<tspan fill="#2E4B8F">.</tspan></text>
+  <text x="40" y="74" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="11" letter-spacing="1.5" fill="#6B7178">MANUSCRIPT-EDITOR — ARCHITECTURE</text>
+  <text x="1120" y="52" text-anchor="end" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="10.5" fill="#6B7178">依實際程式碼 + npm run build 實測繪製</text>
+  <text x="1120" y="66" text-anchor="end" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="10.5" fill="#6B7178">2026-07-24</text>
+  <line x1="40" y1="90" x2="1120" y2="90" stroke="#E7E3DA"/>
+
+  <!-- LAYER 1 -->
+  <g>
+    <rect x="40" y="120" width="1080" height="120" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="62" y="146" font-family="ui-monospace,monospace" font-size="11" fill="#2E4B8F">① 使用者／瀏覽器</text>
+    <text x="62" y="166" font-size="14.5" font-weight="600" fill="#181B20">前端頁面 — app/page.tsx（單一路由，'use client'）</text>
+    <rect x="62" y="182" width="490" height="42" rx="7" fill="#EAEEF7" stroke="#2E4B8F"/>
+    <text x="80" y="200" font-size="12.5" fill="#181B20">分頁 A · 字典工具（預設）</text>
+    <text x="80" y="216" font-size="11" fill="#6B7178">7 項規則式功能 + diff 高亮 + 統計</text>
+    <rect x="568" y="182" width="530" height="42" rx="7" fill="#EAEEF7" stroke="#2E4B8F"/>
+    <text x="586" y="200" font-size="12.5" fill="#181B20">分頁 B · AI 輔助編輯（PRO 標）— components/AIEditor.tsx</text>
+    <text x="586" y="216" font-size="11" fill="#6B7178">5 家供應商 × 模型選單 + API Key 輸入 + 成本試算</text>
+  </g>
+  <line x1="580" y1="240" x2="580" y2="266" stroke="#2E4B8F" marker-end="url(#arrow)"/>
+
+  <!-- LAYER 2 -->
+  <g>
+    <rect x="40" y="270" width="1080" height="108" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="62" y="296" font-family="ui-monospace,monospace" font-size="11" fill="#2E4B8F">② 前端邏輯層</text>
+    <text x="62" y="316" font-size="14.5" font-weight="600" fill="#181B20">lib/textProcessor.ts — 編排 8 個 processor</text>
+    <text x="62" y="336" font-size="12" fill="#181B20">簡繁轉換／英文加空白／修正錯字／刪除贅字／修正標點／語義分段／刪除時間戳／移除多餘空白</text>
+    <text x="62" y="356" font-size="12" fill="#6B7178">+ lib/diffUtils.ts（diff-match-patch）＋ lib/exportUtils.ts（複製／匯出 txt·md）</text>
+  </g>
+  <line x1="580" y1="378" x2="580" y2="404" stroke="#2E4B8F" marker-end="url(#arrow)"/>
+
+  <!-- dead code side note + layer 3 -->
+  <g>
+    <rect x="40" y="408" width="520" height="146" rx="10" fill="#FBFAF7" stroke="#6B7178" stroke-dasharray="5 4"/>
+    <text x="58" y="432" font-family="ui-monospace,monospace" font-size="11" fill="#6B7178">附註 · 已確認的死碼</text>
+    <text x="58" y="454" font-size="12.5" font-weight="600" fill="#6B7178">未被任何路由引用（grep 全 app/ 確認）</text>
+    <text x="58" y="474" font-size="11.5" fill="#6B7178">Editor / FeatureToggles / TextAreas / ActionButtons /</text>
+    <text x="58" y="490" font-size="11.5" fill="#6B7178">Statistics / HistoryPanel / DiffDisplay / ThemeProvider.tsx</text>
+    <text x="58" y="506" font-size="11.5" fill="#6B7178">lib/storageUtils.ts（歷史記錄邏輯，無 UI 串接）</text>
+    <text x="58" y="528" font-size="11" fill="#6B7178">→ RPD.md 原始 Editor 狀態核心架構的殘骸，</text>
+    <text x="58" y="544" font-size="11" fill="#6B7178">現行 UI 已改為 page.tsx＋AIEditor.tsx 內聯管理狀態。</text>
+  </g>
+
+  <g>
+    <rect x="600" y="408" width="520" height="146" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="618" y="432" font-family="ui-monospace,monospace" font-size="11" fill="#2E4B8F">③ 靜態資料層</text>
+    <text x="618" y="454" font-size="12.5" font-weight="600" fill="#181B20">public/dictionaries/*.json（瀏覽器 fetch）</text>
+    <text x="618" y="474" font-size="11.5" fill="#181B20">實際被 processor 讀取：typo-dictionary.json／</text>
+    <text x="618" y="490" font-size="11.5" fill="#181B20">redundancy-dictionary.json／s2t-dictionary.json</text>
+    <text x="618" y="510" font-size="11" fill="#6B7178">另 7 個 json（valid-words／typo-corrections(-clean)／</text>
+    <text x="618" y="526" font-size="11" fill="#6B7178">redundancy-dictionary-expanded／dict-sample／</text>
+    <text x="618" y="542" font-size="11" fill="#6B7178">dict-column-info／variant-characters）為字典產生腳本的原始或中繼資料，前端未引用</text>
+  </g>
+  <line x1="860" y1="554" x2="860" y2="580" stroke="#2E4B8F" marker-end="url(#arrow)"/>
+
+  <!-- LAYER 4 -->
+  <g>
+    <rect x="40" y="584" width="1080" height="110" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="62" y="610" font-family="ui-monospace,monospace" font-size="11" fill="#2E4B8F">④ API 層（僅動態伺服器模式可用）</text>
+    <text x="62" y="630" font-size="14.5" font-weight="600" fill="#181B20">app/api/ai-process/route.ts — Next.js Route Handler（POST）</text>
+    <text x="62" y="650" font-size="12" fill="#181B20">接收 {provider, apiKey, model, text, features} → 組中文 prompt → 依 provider 分派</text>
+    <text x="62" y="668" font-size="12" fill="#6B7178">回應前用 regex 遮罩錯誤訊息中的 sk-… / Bearer … 字串，避免金鑰外洩到 log</text>
+  </g>
+  <line x1="580" y1="694" x2="580" y2="720" stroke="#2E4B8F" marker-end="url(#arrow)"/>
+
+  <!-- LAYER 5 -->
+  <g>
+    <rect x="40" y="724" width="1080" height="100" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="62" y="750" font-family="ui-monospace,monospace" font-size="11" fill="#2E4B8F">⑤ 外部依賴（使用者自帶金鑰 BYOK）</text>
+    <text x="62" y="770" font-size="12" fill="#6B7178">五家文字生成 API，全部由使用者提供自己的 API Key</text>
+    <g font-size="12.5" fill="#181B20">
+      <rect x="62" y="782" width="190" height="28" rx="14" fill="#EAEEF7"/>
+      <text x="90" y="801">🟢 OpenAI</text>
+      <rect x="264" y="782" width="220" height="28" rx="14" fill="#EAEEF7"/>
+      <text x="292" y="801">🟠 Anthropic Claude</text>
+      <rect x="496" y="782" width="200" height="28" rx="14" fill="#EAEEF7"/>
+      <text x="524" y="801">🔵 Google Gemini</text>
+      <rect x="708" y="782" width="170" height="28" rx="14" fill="#EAEEF7"/>
+      <text x="736" y="801">⚫ xAI Grok</text>
+      <rect x="890" y="782" width="180" height="28" rx="14" fill="#EAEEF7"/>
+      <text x="918" y="801">🟣 DeepSeek</text>
+    </g>
+  </g>
+
+  <!-- KEYSTONE -->
+  <g>
+    <rect x="40" y="856" width="1080" height="200" rx="10" fill="#EAEEF7" stroke="#2E4B8F" stroke-width="2"/>
+    <text x="62" y="884" font-family="ui-monospace,monospace" font-size="11" letter-spacing="1.2" fill="#2E4B8F">KEYSTONE DECISION</text>
+    <text x="62" y="910" font-size="16" font-weight="700" fill="#181B20">純靜態匯出（next.config.ts → output: 'export'）</text>
+    <text x="62" y="934" font-size="12.5" fill="#181B20">RPD.md 明文記載理由：免費、無需伺服器、部署在 GitHub Pages、離線可用、無後端追蹤。</text>
+    <text x="62" y="954" font-size="12.5" fill="#181B20">7 個規則式功能因此可完全在瀏覽器端跑，字典即靜態 JSON 資源 — 這是本專案最初、也是至今仍生效的核心決定。</text>
+    <text x="62" y="984" font-size="12.5" fill="#181B20">後來新增的「AI 輔助編輯」分頁（app/api/ai-process/route.ts）需要一個真正的伺服器來代理呼叫 LLM，</text>
+    <text x="62" y="1004" font-size="12.5" font-weight="600" fill="#2E4B8F">這與「純靜態」的 keystone 決定直接衝突 ↓</text>
+  </g>
+  <line x1="580" y1="1056" x2="580" y2="1082" stroke="#B03A2E" marker-end="url(#arrow-err)"/>
+
+  <!-- WARNING -->
+  <g>
+    <rect x="40" y="1086" width="1080" height="330" rx="10" fill="#FBFAF7" stroke="#B03A2E" stroke-width="2"/>
+    <text x="62" y="1114" font-family="ui-monospace,monospace" font-size="11" letter-spacing="1.2" fill="#B03A2E">⚠ 已用實測驗證的矛盾（非臆測）</text>
+    <text x="62" y="1138" font-size="12.5" fill="#181B20">在本機對此專案實際執行 npm run build，Route 摘要輸出：</text>
+
+    <rect x="62" y="1150" width="700" height="96" rx="6" fill="#181B20"/>
+    <text x="80" y="1172" font-family="ui-monospace,monospace" font-size="12" fill="#FBFAF7">Route (app)</text>
+    <text x="80" y="1190" font-family="ui-monospace,monospace" font-size="12" fill="#7fd9ac">┌ ○ /</text>
+    <text x="80" y="1206" font-family="ui-monospace,monospace" font-size="12" fill="#7fd9ac">├ ○ /_not-found</text>
+    <text x="80" y="1222" font-family="ui-monospace,monospace" font-size="12" fill="#f0a99a">└ ƒ /api/ai-process</text>
+    <text x="80" y="1240" font-family="ui-monospace,monospace" font-size="10.5" fill="#9aa0a8">○ Static prerendered ／ ƒ Dynamic server-rendered</text>
+
+    <text x="62" y="1272" font-size="12.5" fill="#181B20">再檢查 out/ 目錄（GitHub Actions 實際上傳到 GitHub Pages 的內容）：其中<tspan font-weight="700">沒有</tspan> api/ 資料夾。</text>
+    <text x="62" y="1292" font-size="12.5" fill="#181B20">/api/ai-process 被標記為 Dynamic，靜態匯出時被整條路徑捨棄，build 本身不報錯、不警告。</text>
+
+    <text x="62" y="1322" font-size="13" font-weight="700" fill="#B03A2E">結論：正式站台 https://miku4ocean.github.io/manuscript-editor/ 上，</text>
+    <text x="62" y="1342" font-size="13" font-weight="700" fill="#B03A2E">「AI 輔助編輯」分頁按下處理按鈕時 fetch('/api/ai-process') 會打到不存在的路徑（404），實際不可用。</text>
+    <text x="62" y="1366" font-size="12.5" fill="#181B20">此路徑只在 npm run dev／npm run start（Node 伺服器模式）下才真的運作；README／PROJECT_SUMMARY 等文件均未提及此限制。</text>
+    <text x="62" y="1394" font-size="12.5" fill="#6B7178">補充：AI Key 僅存於瀏覽器 localStorage、逐次隨請求轉發、route.ts 主動遮罩錯誤訊息中的金鑰字串 — 這部分的隱私設計本身是合理、已驗證存在的。</text>
+  </g>
+
+  <!-- DATA FLOW -->
+  <g>
+    <rect x="40" y="1436" width="1080" height="252" rx="10" fill="#FBFAF7" stroke="#E7E3DA"/>
+    <text x="62" y="1462" font-family="ui-monospace,monospace" font-size="11" letter-spacing="1.2" fill="#6B7178">▸ 資料流（由使用者操作出發）</text>
+    <text x="62" y="1486" font-size="13" font-weight="700" fill="#181B20">字典工具分頁：</text>
+    <text x="62" y="1506" font-size="12" fill="#181B20">貼上文字 → 勾選功能 → textProcessor.ts 依序呼叫 processors（視需要 fetch 字典 json）</text>
+    <text x="62" y="1524" font-size="12" fill="#181B20">→ 產出結果 → diffUtils.ts 計算差異 → 畫面顯示高亮＋統計。全程瀏覽器端執行，無需網路。</text>
+
+    <text x="62" y="1556" font-size="13" font-weight="700" fill="#181B20">AI 輔助編輯分頁：</text>
+    <text x="62" y="1576" font-size="12" fill="#181B20">使用者輸入 API Key（存 localStorage，不上傳伺服器）→ 選 provider/model → 按下處理</text>
+    <text x="62" y="1594" font-size="12" fill="#181B20">→ 瀏覽器 POST {apiKey, model, text, features} 到 /api/ai-process → route.ts 組 prompt 轉發給 LLM</text>
+    <text x="62" y="1612" font-size="12" fill="#181B20">→ 回應逐次轉發回瀏覽器（不落地儲存文稿或金鑰）→（僅動態伺服器模式）畫面顯示結果與成本試算</text>
+  </g>
+
+  <text x="40" y="1706" font-family="ui-monospace,monospace" font-size="10.5" fill="#6B7178">manuscript-editor · architecture.svg · 內容全部來自實際讀取的程式碼與本機建置實測，查無佐證處已標「未確認」或省略 · 2026-07-24</text>
+</svg>

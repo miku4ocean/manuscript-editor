@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>mockup — manuscript-editor 頁面總覽</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --paper:#FBFAF7; --ink:#181B20; --muted:#6B7178;
+    --line:#E7E3DA; --accent:#2E4B8F; --accent-soft:#EAEEF7;
+    --ok:#1F7A54; --err:#B03A2E; --warn:#B8860B;
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.6;}
+  .wrap{max-width:920px; margin:0 auto; padding:48px 24px 80px;}
+  header{border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:32px;}
+  .wordmark{font-family:var(--serif); font-size:28px; font-weight:600;}
+  .wordmark .dot{color:var(--accent);}
+  .subtitle{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:6px;}
+  h2.section{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:40px 0 14px; display:flex; align-items:center; gap:10px;}
+  h2.section::after{content:""; flex:1; height:1px; background:var(--line);}
+  .card{border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; text-decoration:none; color:inherit;}
+  .card:hover{border-color:var(--accent);}
+  .card h3{margin:0 0 4px; font-size:15px;}
+  .card p{margin:0; font-size:12.5px; color:var(--muted);}
+  .tag{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 10px; border-radius:99px; white-space:nowrap;}
+  .note{border:1px dashed var(--line); border-radius:10px; padding:16px 20px; font-size:12.5px; color:var(--muted);}
+  .note b{color:var(--ink);}
+  footer{margin-top:56px; border-top:1px solid var(--line); padding-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="wordmark">Manuscript<span class="dot">.</span></div>
+    <div class="subtitle">manuscript-editor — mockup index</div>
+  </header>
+
+  <h2 class="section">▸ 前台頁面（2 個分頁，皆掛在同一路由 /）</h2>
+
+  <a class="card" href="./front-dictionary.html">
+    <div>
+      <h3>字典工具分頁</h3>
+      <p>front-dictionary.html — 依 app/page.tsx（activeTab === 'dictionary'）繪製：7 項規則式功能勾選、雙欄原文／處理後、diff 高亮、統計列</p>
+    </div>
+    <span class="tag">已實作</span>
+  </a>
+
+  <a class="card" href="./front-ai-editor.html">
+    <div>
+      <h3>AI 輔助編輯分頁</h3>
+      <p>front-ai-editor.html — 依 components/AIEditor.tsx 繪製：API 供應商／模型選擇、金鑰輸入、成本試算、雙欄文字區</p>
+    </div>
+    <span class="tag">已實作（部署有限制）</span>
+  </a>
+
+  <h2 class="section">▸ 後台頁面</h2>
+  <div class="note">
+    本專案<b>沒有後台管理介面</b>——已通讀 app/、components/、lib/ 全部程式碼，確認只有一個路由 <code>/</code>，無 admin／dashboard／login 等後台頁面，也無資料庫或使用者系統。README／RPD.md／HANDOFF.md 皆未規劃後台，故此區塊無項目可列。
+  </div>
+
+  <h2 class="section">▸ 未計入 mockup 的死碼元件</h2>
+  <div class="note">
+    <p><code>components/Editor.tsx</code>、<code>FeatureToggles.tsx</code>、<code>TextAreas.tsx</code>、<code>ActionButtons.tsx</code>、<code>Statistics.tsx</code>、<code>HistoryPanel.tsx</code>、<code>DiffDisplay.tsx</code>、<code>ThemeProvider.tsx</code> 皆存在於 repo 中且各自可能有測試，但 grep 全 <code>app/</code> 後確認<b>沒有任何檔案 import 它們</b>——不是可達的路由或畫面，只是舊版（RPD.md 原始設計）留下的殘骸。依鐵律「基於實際讀到的東西」，這裡不為死碼另開 mockup 頁面，以免暗示它們是現行可用介面；已在 <code>docs/architecture.html</code> 與 <code>progress.md</code> 中記錄其存在與建議清理。</p>
+  </div>
+
+  <footer>
+    manuscript-editor · mockup/index.html · 線框稿使用 Galley 視覺語言（自包含 CSS，無外部依賴）· 2026-07-24
+  </footer>
+
+</div>
+</body>
+</html>
