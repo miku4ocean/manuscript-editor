@@ -1,6 +1,6 @@
-const XLSX = require('xlsx');
-const fs = require('fs');
-const path = require('path');
+import XLSX from 'xlsx';
+import fs from 'fs';
+import path from 'path';
 
 console.log('開始提取錯字對照表...\n');
 
@@ -16,7 +16,7 @@ const typoMapping = {};
 const variantMapping = {};
 let extractedCount = 0;
 
-allData.forEach((row, index) => {
+allData.forEach((row) => {
   const word = row['字詞名'];
   const definition = row['釋義'] || '';
 

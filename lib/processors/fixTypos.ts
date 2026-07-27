@@ -5,7 +5,7 @@
 
 import { getDictionaryPath } from '../utils/paths';
 
-let typoDictionary: Record<string, string> = {};
+const typoDictionary: Record<string, string> = {};
 let dictionaryLoaded = false;
 
 /**

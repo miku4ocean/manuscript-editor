@@ -22,7 +22,7 @@ declare module "@material-tailwind/react" {
   export interface TypographyProps extends Partial<ComponentProps<"p">> {
     variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "lead" | "paragraph" | "small";
     color?: "inherit" | "current" | "black" | "white" | "blue-gray" | "gray" | "brown" | "deep-orange" | "orange" | "amber" | "yellow" | "lime" | "light-green" | "green" | "teal" | "cyan" | "light-blue" | "blue" | "indigo" | "deep-purple" | "purple" | "pink" | "red";
-    as?: any;
+    as?: keyof JSX.IntrinsicElements | React.ComponentType<unknown>;
     className?: string;
     children?: ReactNode;
   }
@@ -32,8 +32,8 @@ declare module "@material-tailwind/react" {
     label?: ReactNode;
     ripple?: boolean;
     className?: string;
-    containerProps?: Record<string, any>;
-    labelProps?: Record<string, any>;
+    containerProps?: Record<string, unknown>;
+    labelProps?: Record<string, unknown>;
   }
 
   export interface TextareaProps extends Partial<ComponentProps<"textarea">> {
@@ -44,8 +44,8 @@ declare module "@material-tailwind/react" {
     error?: boolean;
     success?: boolean;
     resize?: boolean;
-    labelProps?: Record<string, any>;
-    containerProps?: Record<string, any>;
+    labelProps?: Record<string, unknown>;
+    containerProps?: Record<string, unknown>;
     className?: string;
   }
 
