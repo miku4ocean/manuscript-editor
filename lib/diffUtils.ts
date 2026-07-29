@@ -3,7 +3,7 @@
  * Calculate and display differences between original and processed text
  */
 
-import { diff_match_patch, Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from 'diff-match-patch';
+import { diff_match_patch, Diff, DIFF_DELETE, DIFF_INSERT } from 'diff-match-patch';
 
 export interface DiffSegment {
   type: 'equal' | 'insert' | 'delete';

@@ -44,7 +44,7 @@ export function segmentParagraphs(
       // Split by dialogue markers
       const parts: string[] = [];
       let currentPart = '';
-      let inDialogue = false;
+      // dialogueChar doubles as the "inside a dialogue" flag: non-empty means open.
       let dialogueChar = '';
 
       for (let i = 0; i < para.length; i++) {
@@ -55,7 +55,6 @@ export function segmentParagraphs(
             parts.push(currentPart.trim());
           }
           currentPart = char;
-          inDialogue = true;
           dialogueChar = char;
         } else if (
           (char === '」' && dialogueChar === '「') ||
@@ -65,7 +64,6 @@ export function segmentParagraphs(
           currentPart += char;
           parts.push(currentPart.trim());
           currentPart = '';
-          inDialogue = false;
           dialogueChar = '';
         } else {
           currentPart += char;

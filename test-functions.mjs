@@ -46,6 +46,9 @@ console.log('📁 測試 1: 字典檔案完整性檢查');
 console.log('='.repeat(60));
 
 const dictPath = path.join(__dirname, 'public/dictionaries');
+// 只有這三個字典會在執行期被 lib/processors/*.ts 以 fetch() 讀取。
+// 其餘由 scripts/*.mjs 產生的中繼資料放在 scripts/data/，不得回到 public/
+// （public/ 會被靜態匯出整包發佈到 GitHub Pages）。
 const requiredDicts = [
     'typo-dictionary.json',
     'redundancy-dictionary.json',
@@ -61,6 +64,20 @@ for (const dict of requiredDicts) {
         dict,
         exists ? '存在' : '不存在'
     );
+}
+
+const strayDicts = fs
+    .readdirSync(dictPath)
+    .filter((f) => f.endsWith('.json') && !requiredDicts.includes(f));
+logTest(
+    'DICT-no-stray',
+    'public/dictionaries 不含非執行期字典',
+    strayDicts.length === 0,
+    'public/dictionaries/*.json',
+    strayDicts.length === 0 ? '只有 3 個執行期字典' : `多出 ${strayDicts.join(', ')}`
+);
+if (strayDicts.length > 0) {
+    logWarning('DICT-no-stray', `以下檔案應移到 scripts/data/：${strayDicts.join(', ')}`);
 }
 
 // ============================================
@@ -214,16 +231,12 @@ console.log('🧩 測試 6: React 組件檔案完整性');
 console.log('='.repeat(60));
 
 const componentsPath = path.join(__dirname, 'components');
+// 2026-07-25 起舊版元件（Editor/FeatureToggles/TextAreas/DiffDisplay/ActionButtons/
+// Statistics/HistoryPanel）已作為死碼刪除，UI 全部集中在 app/page.tsx，
+// components/ 只剩這兩個真的被引用的元件。
 const requiredComponents = [
     'AIEditor.tsx',
-    'TabNavigation.tsx',
-    'Editor.tsx',
-    'FeatureToggles.tsx',
-    'TextAreas.tsx',
-    'DiffDisplay.tsx',
-    'ActionButtons.tsx',
-    'Statistics.tsx',
-    'HistoryPanel.tsx'
+    'TabNavigation.tsx'
 ];
 
 for (const component of requiredComponents) {
@@ -270,7 +283,8 @@ console.log('📦 測試 8: NPM 依賴套件檢查');
 console.log('='.repeat(60));
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
-const requiredDeps = ['opencc-js', 'pangu', 'diff-match-patch', 'next', 'react'];
+// pangu 已於 2026-07-29 移除：全專案零 import，addSpacesAroundEnglish.ts 是自訂正則實作。
+const requiredDeps = ['diff-match-patch', 'next', 'react'];
 
 for (const dep of requiredDeps) {
     const exists = packageJson.dependencies?.[dep] !== undefined;

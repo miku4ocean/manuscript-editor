@@ -1,6 +1,13 @@
+/**
+ * 觀察教育部辭典 xlsx 原始檔的欄位結構，輸出欄位說明與前 1000 筆樣本。
+ * 產物寫到 scripts/data/（開發期參考資料，不是執行期字典，故不放 public/）。
+ */
 import XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // 讀取欄位說明檔案
 console.log('=== 讀取欄位說明檔案 ===\n');
@@ -53,7 +60,7 @@ if (variantsOrTypos.length > 0) {
 }
 
 // 儲存完整分析結果
-const outputDir = path.join(__dirname, '../public/dictionaries');
+const outputDir = path.join(__dirname, 'data');
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
@@ -71,5 +78,5 @@ fs.writeFileSync(
 );
 
 console.log('\n\n=== 檔案已儲存 ===');
-console.log('欄位說明：public/dictionaries/dict-column-info.json');
-console.log('範例資料（前 1000 筆）：public/dictionaries/dict-sample.json');
+console.log('欄位說明：scripts/data/dict-column-info.json');
+console.log('範例資料（前 1000 筆）：scripts/data/dict-sample.json');

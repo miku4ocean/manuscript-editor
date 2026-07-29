@@ -1,6 +1,14 @@
+/**
+ * 從教育部《重編國語辭典修訂本》xlsx 原始檔提取錯字／異體字對照表。
+ * 產物寫到 scripts/data/（開發期參考資料，不是執行期字典，故不放 public/）。
+ * 執行期真正被 fetch 的三個字典在 public/dictionaries/，由人工維護。
+ */
 import XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 console.log('開始提取錯字對照表...\n');
 
@@ -71,7 +79,8 @@ Object.keys(variantMapping).forEach(key => {
   variantDict[key] = Array.from(variantMapping[key]);
 });
 
-console.log(`\n提取的錯字對照：${Object.keys(typoDict).length} 組`);
+console.log(`\n比對命中次數：${extractedCount} 次`);
+console.log(`提取的錯字對照：${Object.keys(typoDict).length} 組`);
 console.log(`提取的異體字：${Object.keys(variantDict).length} 組`);
 
 // 顯示範例
@@ -86,7 +95,7 @@ Object.entries(variantDict).slice(0, 20).forEach(([char, variants]) => {
 });
 
 // 儲存結果
-const outputDir = path.join(__dirname, '../public/dictionaries');
+const outputDir = path.join(__dirname, 'data');
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
@@ -118,7 +127,7 @@ fs.writeFileSync(
 );
 
 console.log('\n=== 檔案已儲存 ===');
-console.log(`錯字對照表：public/dictionaries/typo-corrections.json (${Object.keys(typoDict).length} 組)`);
-console.log(`異體字對照表：public/dictionaries/variant-characters.json (${Object.keys(variantDict).length} 組)`);
-console.log(`有效字詞列表：public/dictionaries/valid-words.json (${validWords.size} 個)`);
+console.log(`錯字對照表：scripts/data/typo-corrections.json (${Object.keys(typoDict).length} 組)`);
+console.log(`異體字對照表：scripts/data/variant-characters.json (${Object.keys(variantDict).length} 組)`);
+console.log(`有效字詞列表：scripts/data/valid-words.json (${validWords.size} 個)`);
 console.log('\n提取完成！✅');
