@@ -26,7 +26,7 @@ async function runTests() {
   console.log('='.repeat(60) + '\n');
 
   // ========== Test 1: S2T Dictionary ==========
-  console.log('📚 測試 1: 簡繁字典 (s2t-dictionary.json)');
+  console.log('📚 測試 1: 簡繁術語覆蓋層 (s2t-overlay.json；字元轉換由 opencc-js 負責)');
   console.log('-'.repeat(60));
 
   try {

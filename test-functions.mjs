@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import * as OpenCC from 'opencc-js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,7 +53,7 @@ const dictPath = path.join(__dirname, 'public/dictionaries');
 const requiredDicts = [
     'typo-dictionary.json',
     'redundancy-dictionary.json',
-    's2t-dictionary.json'
+    's2t-overlay.json'
 ];
 
 for (const dict of requiredDicts) {
@@ -164,18 +165,34 @@ console.log('\n' + '='.repeat(60));
 console.log('🔄 測試 4: 簡繁轉換字典內容驗證');
 console.log('='.repeat(60));
 
-const s2tDict = JSON.parse(fs.readFileSync(path.join(dictPath, 's2t-dictionary.json'), 'utf8'));
-const s2tCount = Object.keys(s2tDict).length;
+// 2026-08-03 起字元轉換由 opencc-js 負責，s2t-overlay.json 只放 opencc 不涵蓋的
+// 台灣術語（IP位址、收件匣、遮色片…）。所以這裡分兩段驗：
+//   (a) 單字轉換 → 直接問 opencc（那才是真正的來源）
+//   (b) 術語在地化 → 查覆蓋層
+const s2tOverlay = JSON.parse(fs.readFileSync(path.join(dictPath, 's2t-overlay.json'), 'utf8'));
+const overlayCount = Object.keys(s2tOverlay).length;
 logTest(
     'S2T-001',
-    '簡繁轉換字典條目數量 > 1000',
-    s2tCount > 1000,
+    '術語覆蓋層有內容（> 100 條）',
+    overlayCount > 100,
     '條目數量',
-    s2tCount.toString(),
-    '> 1000'
+    overlayCount.toString(),
+    '> 100'
 );
 
-// Test specific conversions
+// 覆蓋層不得含單字條目：單字歧義要交給 opencc 依上下文判斷，
+// 硬換會產生 制度→製度、列車→欄車 這類誤譯（見 simplifiedToTraditional.ts 檔頭）
+const overlaySingles = Object.keys(s2tOverlay).filter((k) => [...k].length === 1);
+logTest(
+    'S2T-002',
+    '術語覆蓋層不含單字條目（避免誤譯）',
+    overlaySingles.length === 0,
+    '單字條目',
+    overlaySingles.join('、') || '(無)',
+    '(無)'
+);
+
+const s2tConvert = OpenCC.Converter({ from: 'cn', to: 'twp' });
 const s2tTests = [
     { simplified: '简', traditional: '簡' },
     { simplified: '体', traditional: '體' },
@@ -183,7 +200,7 @@ const s2tTests = [
 ];
 
 for (const test of s2tTests) {
-    const actual = s2tDict[test.simplified];
+    const actual = s2tConvert(test.simplified);
     logTest(
         `S2T-${test.simplified}`,
         `簡繁轉換: ${test.simplified} → ${test.traditional}`,
@@ -191,6 +208,18 @@ for (const test of s2tTests) {
         test.simplified,
         actual || '(無對應)',
         test.traditional
+    );
+}
+
+// 術語在地化實測（覆蓋層真的有被套用才算數）
+for (const [src, want] of [['IP地址', 'IP位址'], ['收件箱', '收件匣'], ['模板', '範本']]) {
+    logTest(
+        `S2T-術語-${src}`,
+        `術語在地化: ${src} → ${want}`,
+        s2tOverlay[src] === want,
+        src,
+        s2tOverlay[src] || '(無對應)',
+        want
     );
 }
 

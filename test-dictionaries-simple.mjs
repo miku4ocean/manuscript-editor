@@ -40,10 +40,10 @@ let typoDict = {};
 let redundancyDict = {};
 
 try {
-  s2tDict = JSON.parse(readFileSync(join(dictPath, 's2t-dictionary.json'), 'utf8'));
-  console.log(`✅ S2T 字典載入: ${Object.keys(s2tDict).length} 個字詞`);
+  s2tDict = JSON.parse(readFileSync(join(dictPath, 's2t-overlay.json'), 'utf8'));
+  console.log(`✅ S2T 術語覆蓋層載入: ${Object.keys(s2tDict).length} 個術語（字元轉換由 opencc-js 負責）`);
 } catch (e) {
-  console.error('❌ S2T 字典載入失敗:', e.message);
+  console.error('❌ S2T 術語覆蓋層載入失敗:', e.message);
 }
 
 try {
