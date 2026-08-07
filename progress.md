@@ -83,11 +83,10 @@
 
 - Next.js `16.1.1`（App Router，Turbopack）、React `19.2.3`
 - TypeScript `^5`、Tailwind CSS `^4`（`@tailwindcss/postcss`，非 README 描述的 Tailwind 3）
-- `diff-match-patch ^1.0.5`（差異計算）——**唯一實際被 import 的文字處理函式庫**
-- **［2026-07-29 逐套件核對］** `pangu` 已移除（零 import，簡繁空格是自訂正則）；
-  `opencc-js ^1.0.5`、`@material-tailwind/react ^2.1.10`、`react-icons ^5.5.0` 三者**零 import**
-  （前兩者只有 `types/*.d.ts` 型別宣告）；`clsx` / `tailwind-merge` 只被 `lib/utils.ts` 的 `cn()` 用，
-  而 `cn()` 本身沒有引用者。簡繁轉換實際走手工 JSON 字典，不是 opencc。
+- `diff-match-patch ^1.0.5`（差異計算）、`opencc-js ^1.0.5`（簡繁轉換基底，2026-08-03 起正式接上）
+- **［2026-08-07 更新］** `pangu` 已移除；`clsx`／`tailwind-merge`／`lib/utils.ts` 已移除（死碼）；
+  `types/material-tailwind.d.ts` 已移除（死型別宣告）。
+  `@material-tailwind/react ^2.1.10`、`react-icons ^5.5.0` 仍為**零 import**，去留待使用者決定。
 - 測試：`vitest ^4.1.10` + `jsdom`（devDependency）；`xlsx ^0.18.5` **用途已確認**——
   `scripts/parse-dict.mjs`／`scripts/extract-typo-dict.mjs` 讀教育部辭典 xlsx 用，不進 bundle。
 
@@ -114,7 +113,7 @@
 
 ### 資料流
 
-字典工具：使用者輸入 → `textProcessor.ts` 依序呼叫 processors（依需要 `fetch` `public/dictionaries/{typo-dictionary,redundancy-dictionary,s2t-dictionary}.json`）→ `diffUtils.ts` 算差異 → 畫面顯示。全程瀏覽器端執行。
+字典工具：使用者輸入 → `textProcessor.ts` 依序呼叫 processors（簡繁轉換由 opencc-js 動態 import＋`fetch` `public/dictionaries/s2t-overlay.json` 術語覆蓋層；錯字／贅字分別 `fetch` `public/dictionaries/{typo-dictionary,redundancy-dictionary}.json`）→ `diffUtils.ts` 算差異 → 畫面顯示。全程瀏覽器端執行。
 
 AI 輔助編輯（**2026-07-25 起的現況**）：使用者輸入 API Key（存瀏覽器 `localStorage`）→
 `components/AIEditor.tsx` 組 prompt → `lib/aiProviders.ts` **從瀏覽器直接 `fetch` 對應供應商官方端點**
