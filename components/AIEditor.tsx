@@ -244,7 +244,7 @@ export default function AIEditor() {
   const formatCost = (cost: number): string => {
     if (cost < 0.0001) return '< USD $0.0001';
     if (cost < 0.01) return `USD $${cost.toFixed(4)}`;
-    return `USD $${cost.toFixed(4)}`;
+    return `USD $${cost.toFixed(2)}`;
   };
 
   return (
