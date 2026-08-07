@@ -1,5 +1,5 @@
 # HANDOFF — manuscript-editor
-更新：2026-08-03／claude（簡繁轉換改接 opencc-js）
+更新：2026-08-07／claude（死碼清理＋文件校正＋formatCost bug fix）
 
 ## 目前目標
 AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修復「靜態匯出下 AI 分頁 404」部署 bug：AI 分頁改為瀏覽器直連各供應商官方 API，`app/api/` 已整個移除，專案回到 RPD 的「純靜態、GitHub Pages」keystone。本輪（2026-07-29）做技術債清理與文件對帳。
@@ -26,7 +26,7 @@ AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修�
   lib/aiProviders.ts（client-direct 五家路由、CORS header、金鑰遮蔽、usage 正規化，mock global.fetch）
 - 指令：`npm test`／`npm run test:watch`
 - 已刪：app/api/ai-process/route.test.ts（覆蓋移植到 lib/aiProviders.test.ts）、lib/storageUtils.test.ts（隨死碼刪除）
-- 另有兩支手動冒煙腳本（非 npm test）：`node test-functions.mjs`（檔案完整性，現 32/33 通過）、
+- 另有兩支手動冒煙腳本（非 npm test）：`node test-functions.mjs`（檔案完整性，現 37/37 通過）、
   `node test-dictionaries-simple.mjs`（字典抽測，4/4 通過）
 
 ## 2026-08-03／claude(簡繁字典換成 opencc-js —— 下一步 1 的最實質缺口已解)
@@ -75,14 +75,31 @@ AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修�
 **未做**:瀏覽器實機轉換未目視(屬人工項);`opencc-js` 現在真的有被 import 了,
 所以下一步 4「零 import 依賴」的清單少一個,剩 `@material-tailwind/react`／`react-icons`。
 
+## 2026-08-07／claude（死碼清理＋文件校正＋formatCost bug fix）
+
+1. **移除死碼 `lib/utils.ts`**：`cn()` 函式全專案零引用，連帶移除其唯二依賴 `clsx`＋`tailwind-merge`。
+2. **移除死型別宣告 `types/material-tailwind.d.ts`**：`@material-tailwind/react` 全專案零 import，
+   型別宣告無引用者。（依賴本身保留——去留仍待使用者決定。）
+3. **修 `formatCost` 重複分支 bug**：`AIEditor.tsx` 的 `formatCost()` 原本 `cost < 0.01` 與 `else`
+   兩個分支都回傳 `toFixed(4)`，屬複製貼上疏漏。後者改為 `toFixed(2)`。
+4. **AGENTS.md 校正**：opencc-js 不再是零 import（2026-08-03 已接上）；測試數 84→95。
+5. **progress.md 校正**：資料流段落從 `s2t-dictionary.json` 更正為 opencc-js + s2t-overlay.json；
+   依賴段落反映本輪移除項。
+6. **Anthropic 模型定價已查證正確**（claude-sonnet-4-6 $3/$15、claude-opus-4-6 $5/$25、
+   claude-haiku-4-5 $1/$5）——與 AIEditor.tsx 中的值一致，無需修改。
+7. **本輪未做（需使用者）**：移除 `@material-tailwind/react`／`react-icons`（零 import，
+   去留待使用者決定）；OpenAI/Gemini/xAI/DeepSeek 的模型清單與定價未查證（無法自動驗證）；
+   Vercel/GitHub Pages 部署。
+
+驗收（2026-08-07 實跑）：`npm test` 12 檔 **95 全綠**（連跑兩次）、`npm run lint` 乾淨、
+`npm run build` 成功、`node test-functions.mjs` **37/37 通過 100%**、
+`node test-dictionaries-simple.mjs` 4/4 PASS。git 乾淨。
+
 ## 下一步（接手的人從這裡開始）
-1. ~~簡繁字典覆蓋率不足~~ **已於 2026-08-03 改接 opencc-js 解決**（見同日條目）：
-   字元轉換交給 opencc（`cn`→`twp`），另留 165 條術語覆蓋層；`S2T-汉` 已真正轉綠，
-   順帶修掉「單字被換成整個詞」與「替換結果被二次替換」兩個既有 bug。
+1. ~~簡繁字典覆蓋率不足~~ **已於 2026-08-03 改接 opencc-js 解決**
 2. 部署到 GitHub Pages 後，用真金鑰實測各供應商直連（特別是 DeepSeek——其 CORS 未實測；Anthropic 需 `anthropic-dangerous-direct-browser-access: true` header，已內建）
 3. OpenAI/Gemini/xAI/DeepSeek 的模型清單與定價未逐一查證，可能過時（見 progress.md J-8）
 4. `@material-tailwind/react`／`react-icons` 兩個依賴零 import，去留待使用者決定
-   （見 progress.md I-9）。~~`opencc-js`~~ 已於 2026-08-03 正式接上，不再是零 import。
 
 ## 地雷（別踩）
 - API Key 由使用者在 UI 輸入、瀏覽器直連供應商，**不得改回 server proxy 或 server-side env**（靜態匯出沒有伺服器，且會破壞「金鑰不經第三方」的安全文案）
