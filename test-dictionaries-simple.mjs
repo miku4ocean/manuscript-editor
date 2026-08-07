@@ -1,14 +1,20 @@
 /**
  * Simple Dictionary Test Script
  * Tests the current dictionaries with sample text
+ *
+ * 簡繁轉換走 opencc-js（`cn` → `twp`）+ 術語覆蓋層，與主程式邏輯一致。
  */
 
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import * as OpenCC from 'opencc-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// opencc-js converter (與主程式 simplifiedToTraditional.ts 使用同樣的 from/to)
+const s2tConvert = OpenCC.Converter({ from: 'cn', to: 'twp' });
 
 // Test data
 const testCases = {
@@ -64,11 +70,21 @@ try {
 }
 
 // Simple test functions
-function testS2T(text, dict) {
-  let result = text;
-  for (const [simp, trad] of Object.entries(dict)) {
-    result = result.replace(new RegExp(simp, 'g'), trad);
-  }
+
+/**
+ * 簡繁轉換：先用 opencc-js 做字元轉換，再用覆蓋層做術語在地化。
+ * 覆蓋層走「長詞優先、單次掃描」，與主程式 applyOverlay() 一致。
+ */
+function testS2T(text, overlayDict) {
+  // 第一層：opencc-js 字元轉換
+  let result = s2tConvert(text);
+  // 第二層：術語覆蓋層（單次掃描）
+  const keys = Object.keys(overlayDict)
+    .filter(k => k && overlayDict[k] && k !== overlayDict[k])
+    .sort((a, b) => b.length - a.length);
+  if (keys.length === 0) return result;
+  const pattern = new RegExp(keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+  result = result.replace(pattern, m => overlayDict[m] ?? m);
   return result;
 }
 
