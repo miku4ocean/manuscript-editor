@@ -88,7 +88,7 @@ describe('processTextWithAI（瀏覽器直連各供應商）', () => {
     const result = await processTextWithAI({
       provider: 'openai',
       apiKey: 'sk-fake',
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1',
       text: '文稿',
       features: baseFeatures,
     });
@@ -183,7 +183,7 @@ describe('processTextWithAI（瀏覽器直連各供應商）', () => {
       processTextWithAI({
         provider: 'deepseek',
         apiKey: 'sk-fake',
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         text: '文稿',
         features: baseFeatures,
       })

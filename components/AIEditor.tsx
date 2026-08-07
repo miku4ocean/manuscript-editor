@@ -3,18 +3,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import { processTextWithAI, type AIProcessRequest } from '@/lib/aiProviders';
 
-// 最新 API 提供商和模型資訊 (2025年1月更新)
+// API 提供商和模型資訊（2026-08 更新，來源：各供應商官方定價頁）
 const apiProviders = [
   {
     id: 'openai',
     name: 'OpenAI',
     icon: '🟢',
     models: [
-      { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 5.00, outputPrice: 20.00 },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', inputPrice: 0.60, outputPrice: 2.40 },
+      { id: 'gpt-4.1', name: 'GPT-4.1', inputPrice: 2.00, outputPrice: 8.00 },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', inputPrice: 0.40, outputPrice: 1.60 },
+      { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 2.50, outputPrice: 10.00 },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', inputPrice: 0.15, outputPrice: 0.60 },
       { id: 'o3', name: 'o3 (Reasoning)', inputPrice: 2.00, outputPrice: 8.00 },
-      { id: 'o3-mini', name: 'o3-mini', inputPrice: 1.10, outputPrice: 4.40 },
-      { id: 'o1', name: 'o1 (Reasoning)', inputPrice: 15.00, outputPrice: 60.00 },
+      { id: 'o4-mini', name: 'o4-mini (Reasoning)', inputPrice: 1.10, outputPrice: 4.40 },
     ],
     docsUrl: 'https://platform.openai.com/docs/overview',
     apiKeyUrl: 'https://platform.openai.com/api-keys',
@@ -36,9 +37,8 @@ const apiProviders = [
     name: 'Google Gemini',
     icon: '🔵',
     models: [
-      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', inputPrice: 0.10, outputPrice: 0.40 },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', inputPrice: 0.30, outputPrice: 2.50 },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', inputPrice: 1.25, outputPrice: 10.00 },
-      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Free)', inputPrice: 0, outputPrice: 0 },
     ],
     docsUrl: 'https://ai.google.dev/docs',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
@@ -48,9 +48,8 @@ const apiProviders = [
     name: 'xAI Grok',
     icon: '⚫',
     models: [
-      { id: 'grok-4-fast', name: 'Grok 4 Fast', inputPrice: 0.20, outputPrice: 0.50 },
-      { id: 'grok-4', name: 'Grok 4', inputPrice: 3.00, outputPrice: 15.00 },
-      { id: 'grok-3', name: 'Grok 3', inputPrice: 3.00, outputPrice: 15.00 },
+      { id: 'grok-4.5', name: 'Grok 4.5', inputPrice: 2.00, outputPrice: 6.00 },
+      { id: 'grok-4.3', name: 'Grok 4.3', inputPrice: 1.25, outputPrice: 2.50 },
     ],
     docsUrl: 'https://docs.x.ai/',
     apiKeyUrl: 'https://console.x.ai/',
@@ -60,8 +59,8 @@ const apiProviders = [
     name: 'DeepSeek',
     icon: '🟣',
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek Chat', inputPrice: 0.56, outputPrice: 1.68 },
-      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', inputPrice: 0.56, outputPrice: 1.68 },
+      { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', inputPrice: 0.14, outputPrice: 0.28 },
+      { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', inputPrice: 0.44, outputPrice: 0.87 },
     ],
     docsUrl: 'https://platform.deepseek.com/docs',
     apiKeyUrl: 'https://platform.deepseek.com/api_keys',
@@ -101,7 +100,7 @@ function calculateCost(inputTokens: number, outputTokens: number, inputPrice: nu
 
 export default function AIEditor() {
   const [apiProvider, setApiProvider] = useState('openai');
-  const [modelId, setModelId] = useState('gpt-4o-mini');
+  const [modelId, setModelId] = useState('gpt-4.1');
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [originalText, setOriginalText] = useState('');
