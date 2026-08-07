@@ -13,4 +13,4 @@
     腳本中繼資料一律放 `scripts/data/`
 - 依賴實況：**沒有用 pangu**（已移除）、**opencc-js 已正式接上**（2026-08-03 起
   簡繁轉換改為 opencc-js `cn`→`twp` 基底＋165 條術語覆蓋層）。
-  `@material-tailwind/react`、`react-icons` 仍為零 import，去留待使用者決定。
+  `@material-tailwind/react`、`react-icons` 已於 2026-08-07 移除（零 import 死碼）。

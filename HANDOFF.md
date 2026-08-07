@@ -1,5 +1,5 @@
 # HANDOFF — manuscript-editor
-更新：2026-08-07／claude（死碼清理＋文件校正＋formatCost bug fix）
+更新：2026-08-07／claude（技術債收尾——死依賴清除＋冒煙測試修復＋模型清單查證）
 
 ## 目前目標
 AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修復「靜態匯出下 AI 分頁 404」部署 bug：AI 分頁改為瀏覽器直連各供應商官方 API，`app/api/` 已整個移除，專案回到 RPD 的「純靜態、GitHub Pages」keystone。本輪（2026-07-29）做技術債清理與文件對帳。
@@ -95,11 +95,30 @@ AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修�
 `npm run build` 成功、`node test-functions.mjs` **37/37 通過 100%**、
 `node test-dictionaries-simple.mjs` 4/4 PASS。git 乾淨。
 
+## 2026-08-07／claude（技術債收尾——死依賴清除＋冒煙測試修復＋模型清單查證）
+
+1. **移除零引用依賴 `@material-tailwind/react` 與 `react-icons`**：全專案零 import，
+   確認移除後 95 測試全綠、lint 乾淨、build 成功。`types/material-tailwind.d.ts` 一併刪除。
+   `clsx`、`tailwind-merge` 已在同日稍早被移除（前一輪殘留）。
+2. **修 `test-dictionaries-simple.mjs` 簡繁測試**：Test 1 原本只跑覆蓋層字典而不含 opencc-js，
+   必定失敗。改成與主程式一致的兩層管線（opencc + 覆蓋層），4/4 全綠。
+3. **五家 AI 供應商模型清單與定價全面查證更新**（2026-08 各官方定價頁）：
+   - OpenAI：gpt-4o/mini 已降價（$2.50/$10 與 $0.15/$0.60）；新增 gpt-4.1 系列與 o4-mini；移除已停用的 o1
+   - Google：gemini-2.0-flash-exp 已下架（2026-06 sunset）；gemini-2.5-flash 定價更正為 $0.30/$2.50
+   - xAI：grok-3/4/4-fast 全數退役（2026-05-15）；改為 grok-4.5（$2/$6）與 grok-4.3（$1.25/$2.50）
+   - DeepSeek：舊別名 deepseek-chat/reasoner 即將停用；改為 deepseek-v4-flash（$0.14/$0.28）與 v4-pro
+   - Anthropic：查證無誤（sonnet-4-6 $3/$15、opus-4-6 $5/$25、haiku-4-5 $1/$5）
+4. **AGENTS.md 校正**：反映依賴移除（@material-tailwind/react、react-icons 已刪）。
+
+驗收（2026-08-07 第二輪實跑）：`npm test` 12 檔 **95 全綠**（連跑兩次）、`npm run lint` 乾淨、
+`npm run build` 成功、`node test-functions.mjs` **37/37 通過 100%**、
+`node test-dictionaries-simple.mjs` **4/4 PASS**。git 乾淨。
+
 ## 下一步（接手的人從這裡開始）
 1. ~~簡繁字典覆蓋率不足~~ **已於 2026-08-03 改接 opencc-js 解決**
 2. 部署到 GitHub Pages 後，用真金鑰實測各供應商直連（特別是 DeepSeek——其 CORS 未實測；Anthropic 需 `anthropic-dangerous-direct-browser-access: true` header，已內建）
-3. OpenAI/Gemini/xAI/DeepSeek 的模型清單與定價未逐一查證，可能過時（見 progress.md J-8）
-4. `@material-tailwind/react`／`react-icons` 兩個依賴零 import，去留待使用者決定
+3. ~~OpenAI/Gemini/xAI/DeepSeek 的模型清單與定價~~ **已於 2026-08-07 全面查證更新**
+4. ~~`@material-tailwind/react`／`react-icons`~~ **已於 2026-08-07 移除（零 import 死碼）**
 
 ## 地雷（別踩）
 - API Key 由使用者在 UI 輸入、瀏覽器直連供應商，**不得改回 server proxy 或 server-side env**（靜態匯出沒有伺服器，且會破壞「金鑰不經第三方」的安全文案）
