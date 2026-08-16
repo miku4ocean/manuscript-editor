@@ -8,6 +8,17 @@ export function fixPunctuation(text: string): string {
 
   let result = text;
 
+  // 0. Collapse ellipses FIRST — must run before dot→period conversion (step 1)
+  // and duplicate-punctuation dedup (step 2). Those later steps only ever see
+  // one dot/period at a time getting converted (Chinese-char + single dot) and
+  // then dedup adjacent identical marks — neither step recognizes a *run* of
+  // 3+ raw dots as a single unit. By the time this rule used to run (step 8,
+  // now removed below), the run had already been partially consumed/converted,
+  // so it never matched — it was dead code. Worse, the leftover fragments
+  // combined into garbled output like "省略號。.。" instead of a clean "⋯⋯".
+  result = result.replace(/\.{3,}/g, '⋯⋯');
+  result = result.replace(/。{3,}/g, '⋯⋯');
+
   // 1. Convert ALL half-width punctuation to full-width for Chinese context
   // Convert half-width to full-width when near Chinese characters
   result = result.replace(/([\u4e00-\u9fa5]),/g, '$1，'); // comma
@@ -53,10 +64,6 @@ export function fixPunctuation(text: string): string {
 
   // 7. Ensure space after punctuation when followed by English
   result = result.replace(/([，。！？；：])([a-zA-Z])/g, '$1 $2');
-
-  // 8. Fix ellipsis
-  result = result.replace(/\.{3,}/g, '⋯⋯');
-  result = result.replace(/。{3,}/g, '⋯⋯');
 
   // 9. 【NEW】Add period at end of paragraph if missing
   // Split by double newlines (paragraphs)

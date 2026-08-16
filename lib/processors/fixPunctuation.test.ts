@@ -30,4 +30,22 @@ describe('fixPunctuation', () => {
     const result = fixPunctuation('你好 ，世界');
     expect(result).not.toContain(' ，');
   });
+
+  it('collapses a half-width "..." ellipsis into ⋯⋯ instead of garbled 。。', () => {
+    // 曾經是真 bug：dedup 規則（步驟2）比省略號規則先跑，把連續句點吃掉
+    // 只剩「Chinese字+單一句點」再各自轉全形，最後兩個獨立全形句點併在一起
+    // 從沒被 dedup 到，吐出「等等。。」這種殘破結果。
+    expect(fixPunctuation('等等...')).toBe('等等⋯⋯');
+    expect(fixPunctuation('等等....')).toBe('等等⋯⋯');
+  });
+
+  it('collapses a full-width "。。。" run into ⋯⋯ instead of a lone 。', () => {
+    expect(fixPunctuation('你好。。。')).toBe('你好⋯⋯');
+  });
+
+  it('handles multiple ellipses in one string cleanly (no stray raw dots)', () => {
+    const result = fixPunctuation('省略號...继续说下去....');
+    expect(result).toBe('省略號⋯⋯继续说下去⋯⋯');
+    expect(result).not.toContain('.');
+  });
 });
