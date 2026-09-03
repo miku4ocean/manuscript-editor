@@ -80,9 +80,13 @@ ${text}
 }
 
 // 遮蔽錯誤訊息中可能出現的金鑰（避免出現在畫面 alert／截圖／console）
+// 涵蓋本專案五家供應商的金鑰格式：
+//   sk-…（OpenAI／Anthropic sk-ant-…／DeepSeek）、AIza…（Google）、xai-…（xAI）
 export function sanitizeErrorMessage(message: string): string {
   return message
     .replace(/sk-[a-zA-Z0-9-_]+/g, '[REDACTED]')
+    .replace(/AIza[a-zA-Z0-9-_]+/g, '[REDACTED]')
+    .replace(/xai-[a-zA-Z0-9-_]+/g, '[REDACTED]')
     .replace(/Bearer\s+[a-zA-Z0-9-_.]+/g, 'Bearer [REDACTED]')
     .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-_]+/gi, 'api_key: [REDACTED]');
 }
@@ -123,8 +127,21 @@ async function callOpenAICompatible(
   }
 
   const data = await response.json();
+
+  // 供應商可能回 200 但沒有文字內容（content filter 攔截、max_tokens 截斷、
+  // choices 為空…）。直接鏈式取值會炸出英文 TypeError 給使用者，
+  // 這裡改拋含 finish_reason 的可讀錯誤。
+  const choice = data?.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== 'string' || content.trim() === '') {
+    const reason = choice?.finish_reason;
+    throw new Error(
+      `${providerLabel} 回應不含文字內容${reason ? `（finish_reason: ${reason}）` : ''}，請調整文稿或稍後重試`
+    );
+  }
+
   return {
-    processedText: data.choices[0].message.content.trim(),
+    processedText: content.trim(),
     usage: data.usage
       ? { inputTokens: data.usage.prompt_tokens ?? 0, outputTokens: data.usage.completion_tokens ?? 0 }
       : null,
@@ -168,8 +185,24 @@ async function processWithAnthropic(apiKey: string, model: string, prompt: strin
   }
 
   const data = await response.json();
+
+  // content blocks 可能不含 text block（max_tokens 截斷、被拒回覆…）。
+  // 用 find 挑出第一個帶文字的 block，找不到就拋含 stop_reason 的可讀錯誤。
+  const blocks: Array<{ type?: string; text?: string }> = Array.isArray(data?.content)
+    ? data.content
+    : [];
+  const textBlock = blocks.find(
+    (b) => typeof b?.text === 'string' && b.text.trim() !== '' && (b.type === undefined || b.type === 'text')
+  );
+  if (!textBlock?.text) {
+    const reason = data?.stop_reason;
+    throw new Error(
+      `Anthropic 回應不含文字內容${reason ? `（stop_reason: ${reason}）` : ''}，請調整文稿或稍後重試`
+    );
+  }
+
   return {
-    processedText: data.content[0].text.trim(),
+    processedText: textBlock.text.trim(),
     usage: data.usage
       ? { inputTokens: data.usage.input_tokens ?? 0, outputTokens: data.usage.output_tokens ?? 0 }
       : null,
@@ -203,8 +236,28 @@ async function processWithGoogle(apiKey: string, model: string, prompt: string):
 
   const data = await response.json();
   const usageMeta = data.usageMetadata;
+
+  // Gemini 常回 200 但沒有文字內容：MAX_TOKENS 截斷（thinking 模型的思考
+  // token 會吃掉輸出額度，content 沒有 parts）、SAFETY 攔截（candidates
+  // 整個缺失、原因在 promptFeedback.blockReason）。直接鏈式取值會炸出
+  // 「Cannot read properties of undefined」給使用者，這裡改拋可讀錯誤。
+  const candidate = data?.candidates?.[0];
+  const parts: Array<{ text?: string; thought?: boolean }> = Array.isArray(
+    candidate?.content?.parts
+  )
+    ? candidate.content.parts
+    : [];
+  const textParts = parts.filter((p) => typeof p?.text === 'string' && !p.thought);
+  const combinedText = textParts.map((p) => p.text).join('');
+  if (combinedText.trim() === '') {
+    const reason = candidate?.finishReason ?? data?.promptFeedback?.blockReason;
+    throw new Error(
+      `Google Gemini 回應不含文字內容${reason ? `（原因: ${reason}）` : ''}，請調整文稿或稍後重試`
+    );
+  }
+
   return {
-    processedText: data.candidates[0].content.parts[0].text.trim(),
+    processedText: combinedText.trim(),
     usage: usageMeta
       ? {
           inputTokens: usageMeta.promptTokenCount ?? 0,

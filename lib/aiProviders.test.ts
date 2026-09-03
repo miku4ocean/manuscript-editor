@@ -170,6 +170,111 @@ describe('processTextWithAI（瀏覽器直連各供應商）', () => {
     expect((err as Error).message).toContain('[REDACTED]');
   });
 
+  // 真 bug 迴歸：供應商回 200 但沒有文字內容（Gemini 被 MAX_TOKENS/SAFETY 截斷、
+  // choices 為空…）時，舊碼直接鏈式取值，炸出
+  // 「Cannot read properties of undefined」這種英文 TypeError 給使用者。
+  it('Gemini 回應無 parts（MAX_TOKENS）時拋出含原因的可讀錯誤，而非 TypeError', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { role: 'model' }, finishReason: 'MAX_TOKENS' }],
+        usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 4000 },
+      }),
+    });
+
+    const err = await processTextWithAI({
+      provider: 'google',
+      apiKey: 'AIza-fake',
+      model: 'gemini-2.5-flash',
+      text: '文稿',
+      features: baseFeatures,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toMatch(/Cannot read|undefined/);
+    expect((err as Error).message).toContain('回應不含文字內容');
+    expect((err as Error).message).toContain('MAX_TOKENS');
+  });
+
+  it('Gemini 整包被安全機制擋下（無 candidates）時帶出 blockReason', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        promptFeedback: { blockReason: 'SAFETY' },
+      }),
+    });
+
+    const err = await processTextWithAI({
+      provider: 'google',
+      apiKey: 'AIza-fake',
+      model: 'gemini-2.5-flash',
+      text: '文稿',
+      features: baseFeatures,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toMatch(/Cannot read|undefined/);
+    expect((err as Error).message).toContain('SAFETY');
+  });
+
+  it('OpenAI 相容端點 choices 為空時拋出可讀錯誤，而非 TypeError', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [] }),
+    });
+
+    const err = await processTextWithAI({
+      provider: 'openai',
+      apiKey: 'sk-fake',
+      model: 'gpt-4.1',
+      text: '文稿',
+      features: baseFeatures,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toMatch(/Cannot read|undefined/);
+    expect((err as Error).message).toContain('OpenAI 回應不含文字內容');
+  });
+
+  it('OpenAI 相容端點 content 為 null（content_filter）時帶出 finish_reason', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: null }, finish_reason: 'content_filter' }],
+      }),
+    });
+
+    const err = await processTextWithAI({
+      provider: 'openai',
+      apiKey: 'sk-fake',
+      model: 'gpt-4.1',
+      text: '文稿',
+      features: baseFeatures,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toContain('content_filter');
+  });
+
+  it('Anthropic 回應無 text block（如被截斷）時拋出含 stop_reason 的可讀錯誤', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [], stop_reason: 'max_tokens' }),
+    });
+
+    const err = await processTextWithAI({
+      provider: 'anthropic',
+      apiKey: 'sk-ant-fake',
+      model: 'claude-haiku-4-5',
+      text: '文稿',
+      features: baseFeatures,
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toMatch(/Cannot read|undefined/);
+    expect((err as Error).message).toContain('max_tokens');
+  });
+
   it('供應商回非 JSON 錯誤（如 CORS/網路層）時給出可讀的 HTTP 錯誤訊息', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,
@@ -216,6 +321,22 @@ describe('sanitizeErrorMessage', () => {
     expect(masked).not.toContain('sk-abc123');
     expect(masked).not.toContain('eyJtoken.abc');
     expect(masked).not.toContain('XYZ999');
+    expect(masked).toContain('[REDACTED]');
+  });
+
+  // BYOK 加強：本專案五家供應商中，Google（AIza…）與 xAI（xai-…）的金鑰
+  // 格式原本完全不在遮蔽規則內，錯誤訊息若帶金鑰會原文外洩到 alert／截圖。
+  it('遮蔽 Google AIza 金鑰格式', () => {
+    const masked = sanitizeErrorMessage(
+      'invalid key AIzaSyB1234567890abcdefghijklmnopqrstuv provided'
+    );
+    expect(masked).not.toContain('AIzaSyB1234567890abcdefghijklmnopqrstuv');
+    expect(masked).toContain('[REDACTED]');
+  });
+
+  it('遮蔽 xAI xai- 金鑰格式', () => {
+    const masked = sanitizeErrorMessage('bad token xai-abcDEF123456ghiJKL');
+    expect(masked).not.toContain('xai-abcDEF123456ghiJKL');
     expect(masked).toContain('[REDACTED]');
   });
 });
