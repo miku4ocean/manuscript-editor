@@ -151,14 +151,15 @@ export function removeRedundancySync(
   result = result.replace(/！{2,}/g, '！');
   result = result.replace(/？{2,}/g, '？');
 
-  // 7. Clean up multiple spaces
-  result = result.replace(/\s{2,}/g, ' ');
+  // 7. Clean up multiple spaces (horizontal only — \s{2,} would also eat the
+  //    \n\n paragraph separators and merge the whole manuscript into one line)
+  result = result.replace(/[ \t]{2,}/g, ' ');
 
   // 8. Remove spaces before punctuation
-  result = result.replace(/\s+([，。！？；：、」』）])/g, '$1');
+  result = result.replace(/[ \t]+([，。！？；：、」』）])/g, '$1');
 
   // 9. Remove spaces after opening punctuation
-  result = result.replace(/([「『（])\s+/g, '$1');
+  result = result.replace(/([「『（])[ \t]+/g, '$1');
 
   return result.trim();
 }

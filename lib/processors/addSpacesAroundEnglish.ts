@@ -11,13 +11,17 @@ export function addSpacesAroundEnglish(text: string): string {
   // Define Chinese punctuation marks
   const chinesePunctuation = '，。！？；：、「」『』（）《》【】…—';
 
+  // 注意：以下清理規則只處理同一行內的水平空白（空格/tab）。
+  // 曾經用 \s 連換行一起吞——\s{2,} 會把 \n\n 段落分隔壓成一個空格，
+  // 「英文加空白」一開，整篇多段文稿就被併成一段。
+
   // 1. Remove spaces between English/Numbers and punctuation marks
   // e.g., "iPhone 、" -> "iPhone、", "Android ，" -> "Android，"
-  result = result.replace(/([a-zA-Z0-9])\s+([，。！？；：、）」』\]\}）])/g, '$1$2');
+  result = result.replace(/([a-zA-Z0-9])[ \t]+([，。！？；：、）」』\]\}）])/g, '$1$2');
 
   // 2. Remove spaces after punctuation marks before English/Numbers
   // e.g., "， The" -> "，The"
-  result = result.replace(/([，。！？；：、（「『\[\{（])\s+([a-zA-Z0-9])/g, '$1$2');
+  result = result.replace(/([，。！？；：、（「『\[\{（])[ \t]+([a-zA-Z0-9])/g, '$1$2');
 
   // 3. Add space between Chinese and English/Number
   // But NOT if Chinese character is a punctuation mark
@@ -39,13 +43,13 @@ export function addSpacesAroundEnglish(text: string): string {
   });
 
   // 5. Remove spaces before Chinese punctuation marks
-  result = result.replace(/\s+([，。！？；：、）」』\]\}）])/g, '$1');
+  result = result.replace(/[ \t]+([，。！？；：、）」』\]\}）])/g, '$1');
 
   // 6. Remove spaces after opening Chinese punctuation marks
-  result = result.replace(/([（「『\[\{（])\s+/g, '$1');
+  result = result.replace(/([（「『\[\{（])[ \t]+/g, '$1');
 
-  // 7. Remove duplicate spaces
-  result = result.replace(/\s{2,}/g, ' ');
+  // 7. Remove duplicate spaces (horizontal only, keep newlines)
+  result = result.replace(/[ \t]{2,}/g, ' ');
 
   return result;
 }

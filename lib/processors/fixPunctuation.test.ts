@@ -48,4 +48,18 @@ describe('fixPunctuation', () => {
     expect(result).toBe('省略號⋯⋯继续说下去⋯⋯');
     expect(result).not.toContain('.');
   });
+
+  // 真 bug 迴歸：步驟 9 才用 \n\n 把段落 join 回去，步驟 10 的 \s{2,}
+  // 馬上又把 \n\n 壓成一個空格——「修正標點」一開，多段文稿必定被併成一段。
+  it('preserves blank-line paragraph separators (多段文稿不被併段)', () => {
+    expect(fixPunctuation('第一段的內容。\n\n第二段的內容。')).toBe(
+      '第一段的內容。\n\n第二段的內容。'
+    );
+  });
+
+  it('adds trailing periods per paragraph while keeping paragraphs apart', () => {
+    expect(fixPunctuation('第一段沒句號\n\n第二段也沒有')).toBe(
+      '第一段沒句號。\n\n第二段也沒有。'
+    );
+  });
 });

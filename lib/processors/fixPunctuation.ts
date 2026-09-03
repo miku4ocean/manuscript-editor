@@ -56,11 +56,11 @@ export function fixPunctuation(text: string): string {
   // 4. Fix parentheses in Chinese context
   result = result.replace(/\(([\u4e00-\u9fa5][^)]*[\u4e00-\u9fa5])\)/g, '（$1）');
 
-  // 5. Remove spaces before Chinese punctuation
-  result = result.replace(/\s+([，。！？；：、）」』])/g, '$1');
+  // 5. Remove spaces before Chinese punctuation (horizontal only, keep newlines)
+  result = result.replace(/[ \t]+([，。！？；：、）」』])/g, '$1');
 
   // 6. Remove spaces after opening punctuation
-  result = result.replace(/([（「『])\s+/g, '$1');
+  result = result.replace(/([（「『])[ \t]+/g, '$1');
 
   // 7. Ensure space after punctuation when followed by English
   result = result.replace(/([，。！？；：])([a-zA-Z])/g, '$1 $2');
@@ -84,8 +84,10 @@ export function fixPunctuation(text: string): string {
     return para;
   }).join('\n\n');
 
-  // 10. Clean up multiple spaces
-  result = result.replace(/\s{2,}/g, ' ');
+  // 10. Clean up multiple spaces — horizontal only。曾經用 \s{2,}，
+  // 把步驟 9 剛用 \n\n join 回去的段落分隔立刻壓成一個空格，
+  // 「修正標點」一開多段文稿必定被併成一段。
+  result = result.replace(/[ \t]{2,}/g, ' ');
 
   console.log('✅ Fixed punctuation: half-width→full-width, removed duplicates, added sentence endings');
 

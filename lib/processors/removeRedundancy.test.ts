@@ -53,4 +53,16 @@ describe('removeRedundancySync', () => {
     const result = removeRedundancySync('廢話不多說，我們開始吧。', dict);
     expect(result).not.toContain('廢話不多說');
   });
+
+  // 真 bug 迴歸：步驟 7 的 \s{2,} 把段落分隔 \n\n 壓成一個空格，
+  // 導致「刪除贅字」一開，整篇多段文稿被併成一段。
+  it('preserves blank-line paragraph separators (多段文稿不被併段)', () => {
+    const input = '第一段的內容。\n\n第二段的內容。';
+    expect(removeRedundancySync(input, { fillerWords: [], patterns: [] })).toBe(input);
+  });
+
+  it('still collapses runs of spaces within a line', () => {
+    const result = removeRedundancySync('這裡有    多餘空白', { fillerWords: [], patterns: [] });
+    expect(result).toBe('這裡有 多餘空白');
+  });
 });
