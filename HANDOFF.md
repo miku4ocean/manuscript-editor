@@ -1,5 +1,5 @@
 # HANDOFF — manuscript-editor
-更新：2026-08-16／claude（擬真品質測試——簡繁轉換/標點修正/Playwright 全流程/三尺寸版面）
+更新：2026-09-04／claude（深度偵錯——換行吞噬家族/AI 回應錯誤分類/diff 統計）
 
 ## 目前目標
 AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修復「靜態匯出下 AI 分頁 404」部署 bug：AI 分頁改為瀏覽器直連各供應商官方 API，`app/api/` 已整個移除，專案回到 RPD 的「純靜態、GitHub Pages」keystone。本輪（2026-07-29）做技術債清理與文件對帳。
@@ -161,6 +161,39 @@ AI 文稿編輯器（簡繁轉換 + 標點修正 + LLM 潤稿）。前一輪修�
 
 **意外**：Playwright 不是本專案依賴（無 `@playwright/test`），改在 `/tmp/pw-test` 臨時裝
 （chromium browser 本機已快取，秒裝），跑完即棄，未動 `package.json`。
+
+## 2026-09-04／claude（深度偵錯——三組真 bug：換行吞噬家族/AI 回應錯誤分類/diff 統計）
+
+本輪挖尚未覆蓋區域，三組真 bug 全部先紅後綠、分三個 commit（abdc2aa／38196d0／cb52c91）：
+
+**A. 換行吞噬家族（4 檔，多段文稿一經處理就被併段）**：removeSpaces 用 `\s+` 連換行都吞，
+字幕/逐字稿這類「行尾無標點」的多行文稿被整篇併成一行；removeRedundancy／
+addSpacesAroundEnglish／fixPunctuation 的 `\s{2,}` 把 `\n\n` 段落分隔壓成一個空格——
+fixPunctuation 更是步驟 9 剛用 `\n\n` join 回段落、步驟 10 馬上壓掉，「修正標點」一開必併段。
+統一改為只動水平空白 `[ \t]`（removeTimestamps 既有註解「don't touch newlines」證明專案意圖），
+8 條迴歸測試。
+
+**B. AI 供應商回 200 但無文字內容時炸英文 TypeError**（`lib/aiProviders.ts`）：三條解析都直接
+鏈式取值——Gemini 被 MAX_TOKENS 截斷（thinking 模型思考 token 吃掉輸出額度後 content 無
+parts）或 SAFETY 攔截（candidates 缺失）、OpenAI 相容 choices 空/content_filter 回 null、
+Anthropic 無 text block 時，使用者看到「Cannot read properties of undefined」。改為結構檢查後
+拋含 finish_reason／stop_reason／blockReason 的繁中錯誤；Gemini 並過濾 thought parts。
+**BYOK 加強**：sanitizeErrorMessage 補遮 Google（AIza…）與 xAI（xai-…）金鑰格式（原本完全
+不在規則內）。7 條新測試。
+
+**C. diff 統計「修改」恆 ~0**（`app/page.tsx`）：inline 統計的 modifications filter 條件在
+三態型別下恆 false，加減又計 diff 段數而非字元數。改用 diffUtils 既有的 calculateStatistics。
+紅燈用 component 測試（jsdom + react-dom/client + act，mock textProcessor），修復前實測
+顯示 +1/-1/~0、期望 +6/-6/~6。vitest include 加入 `*.test.tsx`。
+
+驗收（2026-09-04 實跑）：`npm test` 13 檔 **98 → 115 全綠**（commit 前後各連跑兩次）、
+`npm run lint` 乾淨、`npx tsc --noEmit` 乾淨、`npm run build` 成功、
+`node test-functions.mjs` 100%、`node test-dictionaries-simple.mjs` 4/4 PASS。
+
+**範圍外發現（未修）**：AIEditor.tsx 的 `data.usage.inputTokens || estimatedCost?.…` 對
+合法 0 值會誤 fallback 到估算值（falsy 陷阱，影響極小）；AIEditor 的 localStorage 存取無
+try-catch，瀏覽器停用 localStorage 時輸入金鑰會拋例外（需 component 測試基建，本輪未動）；
+字數顯示用 `.length`，emoji／擴充區漢字會多算（顯示性質，無資料損毀）。
 
 ## 下一步（接手的人從這裡開始）
 1. ~~簡繁字典覆蓋率不足~~ **已於 2026-08-03 改接 opencc-js 解決**
