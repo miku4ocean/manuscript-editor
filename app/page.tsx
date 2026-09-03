@@ -6,7 +6,7 @@ import {
   preloadDictionaries,
   type FeatureType,
 } from '@/lib/textProcessor';
-import { calculateDiff, type DiffSegment } from '@/lib/diffUtils';
+import { calculateDiff, calculateStatistics, type DiffSegment } from '@/lib/diffUtils';
 import TabNavigation from '@/components/TabNavigation';
 import AIEditor from '@/components/AIEditor';
 
@@ -54,10 +54,15 @@ export default function Home() {
       const segments = calculateDiff(originalText, result.text);
       setDiffSegments(segments);
 
-      const additions = segments.filter(s => s.type === 'insert').length;
-      const deletions = segments.filter(s => s.type === 'delete').length;
-      const modifications = segments.filter(s => s.type !== 'equal' && s.type !== 'insert' && s.type !== 'delete').length;
-      setStats({ additions, deletions, modifications });
+      // 統計交給 lib 既有的 calculateStatistics（字元數）。
+      // 曾經在這裡 inline 自算：modifications 的 filter 條件在三態型別下
+      // 恆為 false（永遠顯示 ~0），加減又是「diff 段數」而非字元數。
+      const diffStats = calculateStatistics(segments);
+      setStats({
+        additions: diffStats.insertions,
+        deletions: diffStats.deletions,
+        modifications: diffStats.modifications,
+      });
       setProcessingTime((performance.now() - startTime) / 1000);
     } catch (error) {
       console.error('Processing error:', error);
