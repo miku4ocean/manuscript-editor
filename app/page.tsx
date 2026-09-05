@@ -126,7 +126,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%)' }}>
+                style={{ background: 'var(--brand-500)' }}>
                 ✨
               </div>
               <div>

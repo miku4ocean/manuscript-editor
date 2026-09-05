@@ -32,7 +32,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
                 AI 輔助編輯
                 <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
                   style={{
-                    background: 'linear-gradient(135deg, var(--brand-100) 0%, var(--brand-200) 100%)',
+                    background: 'var(--brand-100)',
                     color: 'var(--brand-600)'
                   }}>
                   PRO
