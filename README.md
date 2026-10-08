@@ -325,3 +325,9 @@ MIT License
 ---
 
 **Made with ❤️ for content creators and editors**
+
+## 部署（Cloudflare Pages）
+專案 `manuscript-editor-miku`，預定網址 https://manuscript-editor-miku.pages.dev
+- `bash scripts/deploy.sh`（先 `DRY_RUN=1 bash scripts/deploy.sh`：建置 `out/`、產出 `.deploy/`、守門，不部署）
+- 以 `DEPLOY_TARGET=cloudflare` 建置會關閉 `basePath`（GitHub Pages 工作流程仍用 `/manuscript-editor` 子路徑）。
+- AI 輔助編輯為 BYOK：金鑰只存使用者瀏覽器 localStorage，文稿直送所選廠商官方 API。

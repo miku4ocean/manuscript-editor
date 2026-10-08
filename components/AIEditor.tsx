@@ -354,6 +354,20 @@ export default function AIEditor() {
                   {showApiKey ? '🙈 隱藏' : '👁️ 顯示'}
                 </button>
               </div>
+              {apiKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setApiKey('');
+                    setShowApiKey(false);
+                    try { localStorage.removeItem(`ai-editor-apikey-${apiProvider}`); } catch {}
+                  }}
+                  className="btn btn-ghost text-xs self-start"
+                  style={{ minHeight: '44px' }}
+                >
+                  清除{currentProvider?.name}金鑰
+                </button>
+              )}
             </div>
           </div>
 
@@ -364,7 +378,10 @@ export default function AIEditor() {
             <div className="text-xs" style={{ color: '#047857' }}>
               <strong>安全保障：</strong>
               API Key 僅儲存在您的瀏覽器 localStorage 中，不會上傳至任何伺服器。
-              所有 API 請求都是從您的瀏覽器直接發送至 AI 提供商。
+              所有 API 請求都是從您的瀏覽器直接發送至所選 AI 提供商的官方 API。
+              <br />
+              <strong>注意：</strong>按下「AI 處理文稿」後，您貼上或上傳的<strong>整份文稿內容會傳送給所選的 AI 提供商</strong>處理，請勿放入機密文稿。
+              共用或公用電腦請勿儲存金鑰，用完請按「清除金鑰」。
             </div>
           </div>
         </div>
