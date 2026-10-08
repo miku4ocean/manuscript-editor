@@ -95,14 +95,14 @@ async function runTests() {
     });
 
     // Test case 2.2: 座/坐 confusion
-    const typoTest2 = '這個房子座落在山上';
+    const typoTest2 = '物體之間會產生磨擦';
     const typoResult2 = await fixTypos(typoTest2);
     results.push({
-      testName: '錯字修正 - 座落→坐落',
-      passed: typoResult2.includes('坐落'),
+      testName: '錯字修正 - 磨擦→摩擦',
+      passed: typoResult2.includes('摩擦'),
       original: typoTest2,
       result: typoResult2,
-      expected: '這個房子坐落在山上',
+      expected: '物體之間會產生摩擦',
       dictionarySize: typoSize
     });
 

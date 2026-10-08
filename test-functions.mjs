@@ -146,7 +146,7 @@ logTest(
 );
 
 // Check for common filler words
-const expectedFillers = ['其實', '基本上', '然後'];
+const expectedFillers = ['其實', '基本上', '嗯'];
 for (const filler of expectedFillers) {
     const exists = redundancyDict.fillerWords?.includes(filler);
     logTest(

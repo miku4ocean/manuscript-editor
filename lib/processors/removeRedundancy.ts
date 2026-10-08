@@ -140,7 +140,8 @@ export function removeRedundancySync(
     );
 
     result = result.replace(repeatedWordPattern, (match, word) => {
-      console.log(`  🔧 Removed duplicate: "${match}" -> "${word}"`);
+      // 「一X一X」（一個一個、一步一步）是正常的疊用，不是贅字
+      if (wordLen === 2 && word[0] === '一') return match;
       return word;
     });
   }

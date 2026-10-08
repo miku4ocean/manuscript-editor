@@ -69,7 +69,7 @@ const apiProviders = [
 
 const features = [
   { id: 's2t', name: '簡體轉繁體', icon: '🔄' },
-  { id: 'englishCheck', name: '英文檢查', icon: '🔤' },
+  { id: 'englishCheck', name: '英文加空白', icon: '🔤' },
   { id: 'typoFix', name: '修正錯字', icon: '✏️' },
   { id: 'punctuation', name: '修正標點', icon: '。' },
   { id: 'removeTimestamp', name: '刪除時間戳', icon: '⏱️' },

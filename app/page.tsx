@@ -48,6 +48,8 @@ export default function Home() {
     }
 
     setIsProcessing(true);
+    // 讓瀏覽器先把「處理中」畫出來，再開始耗時的同步運算（長稿不會看起來像當機）
+    if (originalText.length > 20000) await new Promise((resolve) => setTimeout(resolve, 30));
     const startTime = performance.now();
 
     try {
@@ -206,7 +208,9 @@ export default function Home() {
               {isProcessing ? (
                 <>
                   <span className="animate-pulse">⏳</span>
-                  處理中...
+                  {originalText.length > 20000
+                    ? `處理中…（${originalText.length.toLocaleString()} 字，長文稿需要數秒，請稍候）`
+                    : '處理中...'}
                 </>
               ) : (
                 <>

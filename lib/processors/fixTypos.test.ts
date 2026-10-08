@@ -20,8 +20,10 @@ describe('fixTyposSync', () => {
     expect(fixTyposSync('這件事很作崇', typoDictionary)).toBe('這件事很作祟');
   });
 
-  it('corrects 座落 to 坐落', () => {
-    expect(fixTyposSync('這個房子座落在山上', typoDictionary)).toBe('這個房子坐落在山上');
+  // 爭議寫法（臺灣兩種寫法皆通用）不強制改
+  it('does not force-change contested spellings (座落／份子／呈報)', () => {
+    const input = '這個房子座落在山上，知識份子與不法份子，呈報上級。';
+    expect(fixTyposSync(input, typoDictionary)).toBe(input);
   });
 
   it('corrects 磨擦 to 摩擦', () => {
