@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as OpenCC from 'opencc-js';
-import { applyOverlay, simplifiedToTraditional } from './simplifiedToTraditional';
+import { applyOverlay, simplifiedToTraditional, simplifiedToTraditionalAsync } from './simplifiedToTraditional';
 
 /**
  * 這支測的是**實際的轉換管線**：opencc（cn → twp）為基底，再套 s2t-overlay.json。
@@ -115,5 +115,26 @@ describe('simplifiedToTraditional（同步版）', () => {
 
   it('沒給字典且轉換器尚未載入時，原樣回傳而不是吐半套結果', () => {
     expect(simplifiedToTraditional('汉语')).toBe('汉语');
+  });
+});
+
+describe('「支持」不一律換成「支援」', () => {
+  it('支持某人／某立場是正確用法，保留「支持」', async () => {
+    expect(await simplifiedToTraditionalAsync('我支持你')).toBe('我支持你');
+    expect(await simplifiedToTraditionalAsync('他们支持某政党的立场')).toBe('他們支持某政黨的立場');
+    expect(await simplifiedToTraditionalAsync('大家都支持这个提议')).toBe('大家都支持這個提議');
+    expect(await simplifiedToTraditionalAsync('我不支持这项政策，但尊重他的决定')).toBe('我不支持這項政策，但尊重他的決定');
+    expect(await simplifiedToTraditionalAsync('支持者')).toBe('支持者');
+  });
+
+  it('軟硬體支援語境仍轉成「支援」', async () => {
+    expect(await simplifiedToTraditionalAsync('软件支持中文输入')).toBe('軟體支援中文輸入');
+    expect(await simplifiedToTraditionalAsync('该设备支持USB 3.0')).toBe('該裝置支援USB 3.0');
+    expect(await simplifiedToTraditionalAsync('这个浏览器不支持该格式')).toBe('這個瀏覽器不支援該格式');
+  });
+
+  it('已是繁體的「支持」同樣依語境處理', async () => {
+    expect(await simplifiedToTraditionalAsync('我支持這個做法')).toBe('我支持這個做法');
+    expect(await simplifiedToTraditionalAsync('本軟體支持多國語言')).toBe('本軟體支援多國語言');
   });
 });

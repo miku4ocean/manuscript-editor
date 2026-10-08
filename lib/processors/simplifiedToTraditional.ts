@@ -59,10 +59,37 @@ async function loadOverlay(): Promise<Record<string, string>> {
   return overlay;
 }
 
+/**
+ * 「支持」→「支援」只在軟硬體／技術語境才換。
+ *
+ * opencc 的 twp 詞庫會把所有「支持」一律換成「支援」，但「支持某人／某立場／某政策」
+ * 在台灣是正確用法，不該被改（我支持你 ≠ 我支援你）。處理方式：
+ *   1. 轉換前把「支持」換成私用區佔位字元，避免 opencc 動到它；
+ *   2. 轉換後逐處看前後文：附近有軟硬體／技術名詞才還原成「支援」，其餘還原為「支持」。
+ * 技術語境判斷刻意保守（寧可不換）：漏換只是保留了正確的「支持」，誤換卻是改錯字。
+ */
+const ZHICHI_PLACEHOLDER = '\uE000';
+const TECH_CONTEXT =
+  /軟體|硬體|裝置|設備|系統(?!性)|作業系統|版本|格式|瀏覽器|平台|協定|驅動|程式|應用程式|外掛|插件|伺服器|處理器|晶片|解析度|編碼|相容|熱插拔|API|SDK|USB|HDMI|Wi-?Fi|藍牙|Windows|macOS|Linux|iOS|Android|Python|JavaScript|HTML|CSS|GPU|CPU|檔案格式|中文輸入|多國語言|多語系/i;
+
+export function localizeZhichi(converted: string): string {
+  if (!converted.includes(ZHICHI_PLACEHOLDER)) return converted;
+  return converted.replace(new RegExp(ZHICHI_PLACEHOLDER, 'g'), (_m, offset: number) => {
+    const before = converted.slice(Math.max(0, offset - 8), offset);
+    const after = converted.slice(offset + 1, offset + 1 + 10);
+    return TECH_CONTEXT.test(before) || TECH_CONTEXT.test(after) ? '支援' : '支持';
+  });
+}
+
+function convertTW(convert: Convert, text: string): string {
+  const protectedText = text.split('支持').join(ZHICHI_PLACEHOLDER);
+  return localizeZhichi(convert(protectedText));
+}
+
 export async function simplifiedToTraditionalAsync(text: string): Promise<string> {
   if (!text) return text;
   const [convert, terms] = await Promise.all([getConverter(), loadOverlay()]);
-  return applyOverlay(convert(text), terms);
+  return applyOverlay(convertTW(convert, text), terms);
 }
 
 /**
@@ -103,7 +130,7 @@ export function simplifiedToTraditional(text: string, dictionary?: Record<string
     console.warn('⚠️ 轉換器尚未載入，請改用 simplifiedToTraditionalAsync()');
     return text;
   }
-  return applyOverlay(converter(text), overlay);
+  return applyOverlay(convertTW(converter, text), overlay);
 }
 
 /** 舊名保留，避免呼叫端一次改太多；語義是「預先載入轉換所需資源」。 */

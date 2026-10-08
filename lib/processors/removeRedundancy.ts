@@ -32,6 +32,23 @@ async function loadRedundancyDictionary() {
   return redundancyDict;
 }
 
+/**
+ * ABAB 動詞重疊（研究研究、討論討論）是正常的口語／書面用法，表示「稍微…一下」，
+ * 不是口誤贅字。通用「重複詞」偵測（步驟 5）遇到這些詞要放過。
+ * 名詞／副詞連說（功能功能、然後然後）仍照舊壓成一個。
+ */
+export const ABAB_VERBS = new Set([
+  '研究', '討論', '考慮', '思考', '練習', '整理', '檢查', '準備', '休息', '介紹',
+  '學習', '參考', '觀察', '了解', '瞭解', '運動', '打掃', '清理', '溝通', '嘗試',
+  '體驗', '欣賞', '商量', '調整', '確認', '研討', '分析', '檢討', '反省', '比較',
+  '測試', '試驗', '享受', '放鬆', '收拾', '安排', '規劃', '探索', '琢磨', '斟酌',
+  '打聽', '打扮', '活動', '溫習', '複習', '復習', '預習', '請教', '商討', '交流',
+  '聯絡', '聯繫', '聊聊', '看看', '想想', '走走', '幫忙', '感謝', '道歉', '搜尋',
+  '調查', '評估', '設計', '改進', '修改', '修正', '核對', '點評', '回想',
+  '回憶', '回顧', '盤點', '梳理', '消化', '適應', '鍛鍊', '訓練', '宣傳', '參觀',
+  '拜訪', '招呼', '招待', '張羅', '應付', '交代', '解釋', '說明', '分享', '理解',
+]);
+
 export async function removeRedundancy(text: string): Promise<string> {
   if (!text) return text;
 
@@ -142,6 +159,8 @@ export function removeRedundancySync(
     result = result.replace(repeatedWordPattern, (match, word) => {
       // 「一X一X」（一個一個、一步一步）是正常的疊用，不是贅字
       if (wordLen === 2 && word[0] === '一') return match;
+      // ABAB 動詞重疊（研究研究、討論討論）是正常用法，不是贅字
+      if (wordLen === 2 && ABAB_VERBS.has(word) && !/\s/.test(match)) return match;
       return word;
     });
   }

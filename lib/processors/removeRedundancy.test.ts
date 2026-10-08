@@ -28,9 +28,26 @@ describe('removeRedundancySync', () => {
     expect(result).not.toContain('的的');
   });
 
-  it('collapses an immediately repeated multi-character word (確確是真 -> 確是真 via generic detector)', () => {
-    const result = removeRedundancySync('這是確認確認的結果', { fillerWords: [], patterns: [] });
-    expect(result).toBe('這是確認的結果');
+  it('collapses an immediately repeated multi-character word (資料資料 -> 資料 via generic detector)', () => {
+    const result = removeRedundancySync('這是資料資料的整理', { fillerWords: [], patterns: [] });
+    expect(result).toBe('這是資料的整理');
+  });
+
+  // ABAB 動詞重疊是正常用法，不能被當贅字刪掉
+  it('keeps ABAB verb reduplication (研究研究、討論討論)', () => {
+    const empty = { fillerWords: [], patterns: [] };
+    expect(removeRedundancySync('我們來研究研究這個問題。', empty)).toBe('我們來研究研究這個問題。');
+    expect(removeRedundancySync('大家先討論討論再決定。', empty)).toBe('大家先討論討論再決定。');
+    expect(removeRedundancySync('你再考慮考慮、確認確認。', empty)).toBe('你再考慮考慮、確認確認。');
+    // 真實字典下也不受影響
+    expect(removeRedundancySync('我們研究研究，再討論討論。', redundancyDictionary)).toBe('我們研究研究，再討論討論。');
+  });
+
+  it('still collapses non-verb stutter and ABAB with a space between', () => {
+    const empty = { fillerWords: [], patterns: [] };
+    expect(removeRedundancySync('這個功能功能很好', empty)).toBe('這個功能很好');
+    expect(removeRedundancySync('結果結果出來了', empty)).toBe('結果出來了');
+    expect(removeRedundancySync('我們研究 研究 這件事', empty)).toBe('我們研究 這件事');
   });
 
   it('confirms the real dictionary includes 的的 as a pattern', () => {
