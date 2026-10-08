@@ -110,11 +110,11 @@ async function runTests() {
     const typoTest3 = '請查看您的帐号和帳單';
     const typoResult3 = await fixTypos(typoTest3);
     results.push({
-      testName: '錯字修正 - 帐号→賬號',
-      passed: typoResult3.includes('賬號'),
+      testName: '錯字修正 - 帐号→帳號',
+      passed: typoResult3.includes('帳號'),
       original: typoTest3,
       result: typoResult3,
-      expected: '請查看您的賬號和賬單',
+      expected: '請查看您的帳號和帳單',
       dictionarySize: typoSize
     });
 

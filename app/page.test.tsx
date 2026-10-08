@@ -63,11 +63,9 @@ describe('Home 字典工具分頁：diff 統計徽章', () => {
       setTextareaValue(textarea, original);
     });
 
-    // 勾選第一個處理功能（簡體轉繁體）
+    // 簡體轉繁體預設已勾選（首次使用不需先找勾選才能處理）
     const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    await act(async () => {
-      checkbox.click();
-    });
+    expect(checkbox.checked).toBe(true);
 
     // 按下「處理文稿」
     const processButton = Array.from(container.querySelectorAll('button')).find((b) =>
@@ -79,6 +77,8 @@ describe('Home 字典工具分頁：diff 統計徽章', () => {
     });
 
     expect(mockProcessText).toHaveBeenCalledTimes(1);
+    const opts = mockProcessText.mock.calls[0][1] as { enabledFeatures: Set<string> };
+    expect([...opts.enabledFeatures].sort()).toEqual(['fix-typos', 'simplified-to-traditional']);
 
     // 期望值：與 diff 顯示同一份 segments、用 lib 既有的 calculateStatistics
     const expected = calculateStatistics(calculateDiff(original, processed));

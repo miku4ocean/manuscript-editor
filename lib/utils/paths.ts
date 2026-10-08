@@ -1,17 +1,13 @@
 /**
- * Get the correct dictionary path based on environment
- * In production (GitHub Pages): /manuscript-editor/dictionaries/
- * In development: /dictionaries/
+ * 取得字典檔路徑。前綴取自「建置時」的 basePath（next.config.ts 以 NEXT_PUBLIC_BASE_PATH 注入）：
+ * - GitHub Pages 建置：/manuscript-editor
+ * - Cloudflare Pages（DEPLOY_TARGET=cloudflare）與本機開發：空字串
+ * 不可再依 hostname 判斷，否則部署在任何非 localhost 網域根目錄都會 404。
  */
+export function getBasePath(): string {
+  return process.env.NEXT_PUBLIC_BASE_PATH || '';
+}
+
 export function getDictionaryPath(filename: string): string {
-  // Check if we're in the browser
-  if (typeof window !== 'undefined') {
-    // In production (GitHub Pages), we need the /manuscript-editor prefix
-    const isProduction = window.location.hostname !== 'localhost' &&
-                        window.location.hostname !== '127.0.0.1';
-    const basePath = isProduction ? '/manuscript-editor' : '';
-    return `${basePath}/dictionaries/${filename}`;
-  }
-  // Server-side fallback (shouldn't be used for dictionary loading)
-  return `/dictionaries/${filename}`;
+  return `${getBasePath()}/dictionaries/${filename}`;
 }

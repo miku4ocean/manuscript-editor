@@ -24,7 +24,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'dictionary' | 'ai'>('dictionary');
   const [originalText, setOriginalText] = useState('');
   const [processedText, setProcessedText] = useState('');
-  const [enabledFeatures, setEnabledFeatures] = useState<Set<FeatureType>>(new Set());
+  const [enabledFeatures, setEnabledFeatures] = useState<Set<FeatureType>>(
+    () => new Set<FeatureType>(['simplified-to-traditional', 'fix-typos'])
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [diffSegments, setDiffSegments] = useState<DiffSegment[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -195,7 +197,7 @@ export default function Home() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
             <button
               onClick={handleProcess}
               disabled={isProcessing || enabledFeatures.size === 0}
@@ -235,6 +237,11 @@ export default function Home() {
               🗑️ 清除
             </button>
           </div>
+          {enabledFeatures.size === 0 && (
+            <p role="status" className="text-sm text-center -mt-5 mb-8" style={{ color: 'var(--text-muted)' }}>
+              請先在上方勾選至少一項處理功能，「處理文稿」才會啟用。
+            </p>
+          )}
 
           {/* Statistics */}
           {processedText && (

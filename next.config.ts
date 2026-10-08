@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   },
   basePath,
   assetPrefix: basePath,
+  // 建置時把 basePath 注入前端（字典路徑用），避免用 hostname 猜測
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };
 
 export default nextConfig;

@@ -228,6 +228,10 @@ body {
   outline: none;
 }
 
+.btn {
+  white-space: nowrap;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -555,5 +559,27 @@ body {
 @media (max-width: 480px) {
   .feature-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 手機：觸控目標 ≥44px、分頁與按鈕不擠壓 */
+@media (max-width: 640px) {
+  .btn,
+  .tab {
+    min-height: 44px;
+  }
+
+  .tab-group {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1 1 0;
+    padding: 0.625rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .divider {
+    display: none;
   }
 }

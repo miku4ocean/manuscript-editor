@@ -161,6 +161,20 @@ export default function AIEditor() {
     }
   }, [apiProvider]);
 
+  // 清除瀏覽器中所有提供商的金鑰（共用電腦用完務必執行）
+  const clearAllKeys = () => {
+    try {
+      const names: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ai-editor-apikey-')) names.push(k);
+      }
+      names.forEach((k) => localStorage.removeItem(k));
+    } catch {}
+    setApiKey('');
+    setShowApiKey(false);
+  };
+
   const toggleFeature = (featureId: string) => {
     setEnabledFeatures(prev => ({
       ...prev,
@@ -260,8 +274,8 @@ export default function AIEditor() {
               href={currentProvider.apiKeyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs underline"
-              style={{ color: 'var(--brand-500)' }}
+              className="text-xs underline inline-flex items-center"
+              style={{ color: 'var(--brand-500)', minHeight: '44px' }}
             >
               申請 API Key →
             </a>
@@ -368,6 +382,14 @@ export default function AIEditor() {
                   清除{currentProvider?.name}金鑰
                 </button>
               )}
+              <button
+                type="button"
+                onClick={clearAllKeys}
+                className="btn btn-ghost text-xs self-start"
+                style={{ minHeight: '44px' }}
+              >
+                清除所有金鑰（全部提供商）
+              </button>
             </div>
           </div>
 
@@ -380,8 +402,8 @@ export default function AIEditor() {
               API Key 僅儲存在您的瀏覽器 localStorage 中，不會上傳至任何伺服器。
               所有 API 請求都是從您的瀏覽器直接發送至所選 AI 提供商的官方 API。
               <br />
-              <strong>注意：</strong>按下「AI 處理文稿」後，您貼上或上傳的<strong>整份文稿內容會傳送給所選的 AI 提供商</strong>處理，請勿放入機密文稿。
-              共用或公用電腦請勿儲存金鑰，用完請按「清除金鑰」。
+              <strong>注意：</strong>按下「AI 處理文稿」後，您貼上或輸入的<strong>整份文稿內容會傳送給所選的 AI 提供商</strong>處理，請勿放入機密文稿。
+              共用或公用電腦請勿儲存金鑰，用完請按「清除所有金鑰」。
             </div>
           </div>
         </div>
@@ -611,11 +633,11 @@ export default function AIEditor() {
                 <div className="text-sm font-medium mb-2">{provider.name}</div>
                 <div className="flex flex-col gap-1">
                   <a href={provider.apiKeyUrl} target="_blank" rel="noopener noreferrer"
-                    className="text-xs underline" style={{ color: 'var(--brand-500)' }}>
+                    className="text-xs underline inline-flex items-center justify-center" style={{ color: 'var(--brand-500)', minHeight: '44px' }}>
                     申請 Key
                   </a>
                   <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer"
-                    className="text-xs underline" style={{ color: 'var(--text-muted)' }}>
+                    className="text-xs underline inline-flex items-center justify-center" style={{ color: 'var(--text-muted)', minHeight: '44px' }}>
                     文件
                   </a>
                 </div>
