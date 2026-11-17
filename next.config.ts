@@ -7,6 +7,10 @@ const basePath =
     : '/manuscript-editor';
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Set by `next upgrade --agent=security`.
+    agentUpgrade: "security",
+  },
   output: 'export',
   images: {
     unoptimized: true,
