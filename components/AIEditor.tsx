@@ -150,16 +150,11 @@ export default function AIEditor() {
     };
   }, [originalText, currentModel]);
 
+  // 掛載後才讀 localStorage（SSR 無 window）；切換提供商時改在 onChange 讀取
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedApiKey = localStorage.getItem(`ai-editor-apikey-${apiProvider}`);
-      if (savedApiKey) {
-        setApiKey(savedApiKey);
-      } else {
-        setApiKey('');
-      }
-    }
-  }, [apiProvider]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 從外部儲存同步，只在掛載時執行一次
+    setApiKey(localStorage.getItem('ai-editor-apikey-openai') || '');
+  }, []);
 
   // 清除瀏覽器中所有提供商的金鑰（共用電腦用完務必執行）
   const clearAllKeys = () => {
@@ -292,6 +287,7 @@ export default function AIEditor() {
                 value={apiProvider}
                 onChange={(e) => {
                   setApiProvider(e.target.value);
+                  setApiKey(localStorage.getItem(`ai-editor-apikey-${e.target.value}`) || '');
                   const newProvider = apiProviders.find(p => p.id === e.target.value);
                   setModelId(newProvider?.models[0]?.id || '');
                 }}
